@@ -1,0 +1,16 @@
+[ng\:cloak], [ng-cloak], .ng-cloak {
+  display: none !important; }
+
+.blog-menu {
+  padding: 5px;
+  margin-bottom: 14px; }
+
+.blog-posts .blog-post {
+  border: 1px solid black;
+  margin-bottom: 20px;
+  padding: 5px; }
+  .blog-posts .blog-post .blog-post-title {
+    font-size: large;
+    border-bottom: 1px solid black; }
+
+/*# sourceMappingURL=blog.css.map */

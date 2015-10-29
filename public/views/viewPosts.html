@@ -1,0 +1,15 @@
+<div class="blog-posts" ng-cloak>
+  <div ng-show="loggedIn" style='margin-bottom: 20px;'>Posts are: {{ vm.list() }}</div>
+
+  <div class="blog-post" ng-repeat="post in vm.list()">
+    <div class="blog-post-title" ng-cloak>{{ post.title }}</div>
+    <div class="blog-post-body" ng-cloak>{{ post.body }}</div>
+    <div>
+      <a ng-show="loggedIn" href="/#/admin/posts/{{ post.id }}">Edit</a>
+      <a ng-hide="loggedIn" href="/#/posts/{{ post.id }}">Read</a>
+      <a ng-show="loggedIn" href="javascript:;" ng-click="vm.deletePost( post.id )">Delete</a>
+    </div>
+  </div>
+
+  <a ng-show="loggedIn" href="/#/admin/posts/">New Post</a>
+</div>
