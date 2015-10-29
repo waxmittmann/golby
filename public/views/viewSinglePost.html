@@ -1,7 +1,7 @@
 <div class="blog-posts" ng-cloak>
-  <div class="blog-post">
-    <div class="blog-post-title" ng-cloak>{{ vm.getSelectedPost().title }}</div>
-    <div class="blog-post-body" ng-cloak>{{ vm.getSelectedPost().body }}</div>
+  <div class="blog-post" ng-init="loadSelectedPost()">
+    <div class="blog-post-title" ng-cloak>{{ vm.selectedPost.title }}</div>
+    <div class="blog-post-body" ng-cloak>{{ vm.selectedPost.body }}</div>
   </div>
 
   <a href="/#/">Back</a>

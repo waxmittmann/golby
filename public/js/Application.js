@@ -10,25 +10,37 @@ var blogposts;
             this.$location = $location;
             this.$routeParams = $routeParams;
             $scope.vm = this;
-            this.blogPosts = this.blogPostStore.list();
+            this.loadPosts();
             this.selectedPostId = $routeParams.postId;
             console.log("Called constructor!");
         }
+        ViewBlogPostCtrl.prototype.loadPosts = function () {
+            this.blogPostStore.list().then(function (response) {
+                this.blogPosts = JSON.parse(response);
+            }, function () {
+                console.log("Error retrieving posts");
+            });
+        };
         ViewBlogPostCtrl.prototype.list = function () {
             return this.blogPosts;
         };
-        ViewBlogPostCtrl.prototype.getPosts = function (from, to) {
-            throw "Not implemented yet";
-        };
-        ViewBlogPostCtrl.prototype.getSelectedPost = function () {
+        ViewBlogPostCtrl.prototype.loadSelectedPost = function () {
             if (!this.selectedPostId) {
                 throw "No post was selected...";
             }
-            return this.blogPostStore.get(this.selectedPostId);
+            this.blogPostStore.get(this.selectedPostId).then(function (response) {
+                var selectedPost = JSON.parse(response);
+                this.$scope.selectedPost = selectedPost;
+            }, function () {
+                console.log("Error retrieving posts");
+            });
         };
         ViewBlogPostCtrl.prototype.deletePost = function (id) {
-            this.blogPostStore.remove(id);
-            this.blogPosts = this.blogPostStore.list();
+            this.blogPostStore.remove(id).then(function () {
+                this.loadPosts();
+            }, function () {
+                console.log("Error deleting post");
+            });
         };
         ViewBlogPostCtrl.$inject = [
             'blogPostStore',
@@ -58,38 +70,45 @@ var blogposts;
             }
             if ($routeParams.postId) {
                 $scope.newPostId = $routeParams.postId;
-                var postToEdit = blogPostStore.get($scope.newPostId);
-                if (!postToEdit) {
-                    throw "Post with id " + $scope.newPostId + " not found";
-                }
-                $scope.newPostTitle = postToEdit.title;
-                $scope.newPostBody = postToEdit.body;
+                blogPostStore.get($scope.newPostId).then(function (response) {
+                    var postToEdit = JSON.parse(response);
+                    if (!postToEdit) {
+                        throw "Post with id " + $scope.newPostId + " not found";
+                    }
+                    $scope.postEditing = postToEdit;
+                }, function (error) {
+                    console.log("Failed to load post");
+                });
             }
             else {
-                $scope.newPostTitle = "";
-                $scope.newPostBody = "";
+                $scope.postEditing = new blogposts.BlogPostData("", "");
             }
         }
         CreateBlogPostCtrl.prototype.addOrEditPost = function () {
-            if (this.$scope.newPostId) {
-                var newPost = new blogposts.BlogPost(this.$scope.newPostId, this.$scope.newPostTitle, this.$scope.newPostBody);
-                this.blogPostStore.edit(newPost);
+            if (this.$scope.postEditing.id) {
+                return this.blogPostStore.edit(this.$scope.postEditing);
             }
             else {
-                var newPost = new blogposts.BlogPost(this.blogPostStore.nextId(), this.$scope.newPostTitle, this.$scope.newPostBody);
-                this.blogPostStore.add(newPost);
-                this.$scope.newPostId = newPost.id;
+                return this.blogPostStore.add(this.$scope.postEditing);
             }
         };
         CreateBlogPostCtrl.prototype.save = function () {
-            this.addOrEditPost();
+            this.addOrEditPost().then(function () {
+                console.log("Saved successfully");
+            }, function () {
+                console.log("Failed to save");
+            });
         };
         CreateBlogPostCtrl.prototype.cancel = function () {
             this.$location.path("/");
         };
         CreateBlogPostCtrl.prototype.done = function () {
-            this.addOrEditPost();
-            this.$location.path("/");
+            this.addOrEditPost().then(function () {
+                console.log("Saved successfully");
+                this.$location.path("/");
+            }, function () {
+                console.log("Failed to save");
+            });
         };
         CreateBlogPostCtrl.$inject = [
             'blogPostStore',
@@ -120,6 +139,14 @@ var blogposts;
 var blogposts;
 (function (blogposts) {
     'use strict';
+    var BlogPostData = (function () {
+        function BlogPostData(title, body) {
+            this.title = title;
+            this.body = body;
+        }
+        return BlogPostData;
+    })();
+    blogposts.BlogPostData = BlogPostData;
 })(blogposts || (blogposts = {}));
 /// <reference path='../../_all.ts' />
 var blogposts;
@@ -128,14 +155,18 @@ var blogposts;
     var LocalStorageBlogPostStore = (function () {
         function LocalStorageBlogPostStore() {
         }
-        LocalStorageBlogPostStore.prototype.add = function (newPost) {
-            this.doWithPosts(function (posts) {
-                posts.push(newPost);
+        LocalStorageBlogPostStore.prototype.add = function (newPostData) {
+            return this.doWithPosts(function (posts) {
+                var newPostData = new blogposts.BlogPost(this.nextId(), newPostData.title, newPostData.body);
+                posts.push(newPostData);
+                return newPostData;
             });
         };
         LocalStorageBlogPostStore.prototype.edit = function (editedPost) {
             this.doWithPosts(function (posts) {
-                var index = _.findIndex(posts, function (post) { return post.id == editedPost.id; });
+                var index = _.findIndex(posts, function (post) {
+                    return post.id == editedPost.id;
+                });
                 if (index != -1) {
                     posts[index] = editedPost;
                 }
@@ -143,6 +174,7 @@ var blogposts;
                     throw "No post with id " + editedPost.id;
                 }
             });
+            return new blogposts.InstantPromise("");
         };
         LocalStorageBlogPostStore.prototype.get = function (id) {
             var post = this.doWithPosts(function (posts) {
@@ -152,17 +184,22 @@ var blogposts;
                 console.log("Found " + index);
                 return posts[index];
             });
-            return post;
+            return new blogposts.InstantPromise(post);
         };
         LocalStorageBlogPostStore.prototype.remove = function (id) {
-            var posts = this.list();
-            var newPosts = _.filter(posts, function (post) { return post.id != id; });
-            var difference = posts.length - newPosts.length;
-            localStorage.setItem(LocalStorageBlogPostStore.STORAGE_ID, JSON.stringify(newPosts));
-            console.log("Stored " + newPosts);
-            return difference;
+            return new blogposts.InstantPromise(function (posts) {
+                var newPosts = _.filter(posts, function (post) { return post.id != id; });
+                var difference = posts.length - newPosts.length;
+                localStorage.setItem(LocalStorageBlogPostStore.STORAGE_ID, JSON.stringify(newPosts));
+                console.log("Stored " + newPosts);
+                return new blogposts.InstantPromise(difference);
+            });
         };
+        //list():BlogPost[] {
         LocalStorageBlogPostStore.prototype.list = function () {
+            return new blogposts.InstantPromise(this.listHelper());
+        };
+        LocalStorageBlogPostStore.prototype.listHelper = function () {
             var result = JSON.parse(localStorage.getItem(LocalStorageBlogPostStore.STORAGE_ID));
             if (!result) {
                 result = new Array();
@@ -173,7 +210,9 @@ var blogposts;
         LocalStorageBlogPostStore.prototype.nextId = function () {
             var difference = this.doWithPosts(function (posts) {
                 var largestId = _.chain(posts)
-                    .map(function (post) { return Number(post.id); })
+                    .map(function (post) {
+                    return Number(post.id);
+                })
                     .reduce(function (largestSoFar, cur) {
                     console.log("Comparing " + largestSoFar + " and " + cur);
                     return largestSoFar > cur ? largestSoFar : cur;
@@ -186,7 +225,7 @@ var blogposts;
             return difference;
         };
         LocalStorageBlogPostStore.prototype.doWithPosts = function (func) {
-            var posts = this.list();
+            var posts = this.listHelper();
             var result = func(posts);
             localStorage.setItem(LocalStorageBlogPostStore.STORAGE_ID, JSON.stringify(posts));
             return result;
@@ -250,6 +289,48 @@ var blogposts;
     })();
     blogposts.AuthenticationCtrl = AuthenticationCtrl;
 })(blogposts || (blogposts = {}));
+/// <reference path='../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+})(blogposts || (blogposts = {}));
+/// <reference path='../../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+    var AngularPromise = (function () {
+        function AngularPromise(angularPromise) {
+            this.angularPromise = angularPromise;
+        }
+        AngularPromise.prototype.then = function (successHandler, failureHandler) {
+            this.angularPromise.then(function (response) {
+                successHandler(response);
+            }, function (response) {
+                failureHandler(response);
+            });
+        };
+        return AngularPromise;
+    })();
+    blogposts.AngularPromise = AngularPromise;
+})(blogposts || (blogposts = {}));
+/// <reference path='../../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+    var InstantPromise = (function () {
+        function InstantPromise(value) {
+            this.value = value;
+            this.producer = function () {
+                return value;
+            };
+        }
+        InstantPromise.prototype.then = function (successHandler, failureHandler) {
+            successHandler(this.producer());
+        };
+        return InstantPromise;
+    })();
+    blogposts.InstantPromise = InstantPromise;
+})(blogposts || (blogposts = {}));
 /// <reference path='../libs/jquery/jquery.d.ts' />
 /// <reference path='../libs/angular/angular.d.ts' />
 /// <reference path='../libs/angular/angular-route.d.ts' />
@@ -261,6 +342,9 @@ var blogposts;
 /// <reference path='./blogpost/implementations/LocalStorageBlogPostStore.ts' />
 /// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
+/// <reference path='./common/Promise.ts' />
+/// <reference path='./common/AngularPromise.ts' />
+/// <reference path='./common/InstantPromise.ts' />
 /// <reference path='_all.ts' />
 var blogposts;
 (function (blogposts) {
