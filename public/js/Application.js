@@ -70,8 +70,8 @@ var blogposts;
             }
             if ($routeParams.postId) {
                 $scope.newPostId = $routeParams.postId;
-                blogPostStore.get($scope.newPostId).then(function (response) {
-                    var postToEdit = JSON.parse(response);
+                blogPostStore.get($scope.newPostId).then(function (blogPost) {
+                    var postToEdit = blogPost;
                     if (!postToEdit) {
                         throw "Post with id " + $scope.newPostId + " not found";
                     }
@@ -174,7 +174,7 @@ var blogposts;
                     throw "No post with id " + editedPost.id;
                 }
             });
-            return new blogposts.InstantPromise("");
+            return new blogposts.InstantPromise.fromValue("");
         };
         LocalStorageBlogPostStore.prototype.get = function (id) {
             var post = this.doWithPosts(function (posts) {
@@ -192,12 +192,13 @@ var blogposts;
                 var difference = posts.length - newPosts.length;
                 localStorage.setItem(LocalStorageBlogPostStore.STORAGE_ID, JSON.stringify(newPosts));
                 console.log("Stored " + newPosts);
-                return new blogposts.InstantPromise(difference);
+                var p = blogposts.InstantPromise.fromValue(difference);
+                return p;
             });
         };
         //list():BlogPost[] {
         LocalStorageBlogPostStore.prototype.list = function () {
-            return new blogposts.InstantPromise(this.listHelper());
+            return blogposts.InstantPromise.fromValue(this.listHelper());
         };
         LocalStorageBlogPostStore.prototype.listHelper = function () {
             var result = JSON.parse(localStorage.getItem(LocalStorageBlogPostStore.STORAGE_ID));
@@ -294,7 +295,7 @@ var blogposts;
 (function (blogposts) {
     'use strict';
 })(blogposts || (blogposts = {}));
-/// <reference path='../../_all.ts' />
+/// <reference path='../_all.ts' />
 var blogposts;
 (function (blogposts) {
     'use strict';
@@ -313,17 +314,19 @@ var blogposts;
     })();
     blogposts.AngularPromise = AngularPromise;
 })(blogposts || (blogposts = {}));
-/// <reference path='../../_all.ts' />
+/// <reference path='../_all.ts' />
 var blogposts;
 (function (blogposts) {
     'use strict';
     var InstantPromise = (function () {
-        function InstantPromise(value) {
-            this.value = value;
-            this.producer = function () {
-                return value;
-            };
+        function InstantPromise(producer) {
+            this.producer = producer;
         }
+        InstantPromise.fromValue = function (value) {
+            return new InstantPromise(function () {
+                return value;
+            });
+        };
         InstantPromise.prototype.then = function (successHandler, failureHandler) {
             successHandler(this.producer());
         };
