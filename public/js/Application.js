@@ -15,8 +15,8 @@ var blogposts;
             console.log("Called constructor!");
         }
         ViewBlogPostCtrl.prototype.loadPosts = function () {
-            this.blogPostStore.list().then(function (response) {
-                this.blogPosts = JSON.parse(response);
+            this.blogPostStore.list().then(function (inBlogPosts) {
+                this.blogPosts = inBlogPosts;
             }, function () {
                 console.log("Error retrieving posts");
             });
@@ -28,8 +28,8 @@ var blogposts;
             if (!this.selectedPostId) {
                 throw "No post was selected...";
             }
-            this.blogPostStore.get(this.selectedPostId).then(function (response) {
-                var selectedPost = JSON.parse(response);
+            this.blogPostStore.get(this.selectedPostId).then(function (blogPost) {
+                var selectedPost = blogPost;
                 this.$scope.selectedPost = selectedPost;
             }, function () {
                 console.log("Error retrieving posts");
@@ -153,7 +153,9 @@ var blogposts;
 (function (blogposts) {
     'use strict';
     var LocalStorageBlogPostStore = (function () {
-        function LocalStorageBlogPostStore() {
+        function LocalStorageBlogPostStore(promiseBuilder, $q) {
+            this.promiseBuilder = promiseBuilder;
+            this.$q = $q;
         }
         LocalStorageBlogPostStore.prototype.add = function (newPostData) {
             return this.doWithPosts(function (posts) {
@@ -163,18 +165,20 @@ var blogposts;
             });
         };
         LocalStorageBlogPostStore.prototype.edit = function (editedPost) {
+            var deferred = this.$q.defer();
             this.doWithPosts(function (posts) {
                 var index = _.findIndex(posts, function (post) {
                     return post.id == editedPost.id;
                 });
                 if (index != -1) {
                     posts[index] = editedPost;
+                    deferred.resolve(editedPost);
                 }
                 else {
-                    throw "No post with id " + editedPost.id;
+                    deferred.reject("No post with id " + editedPost.id);
                 }
             });
-            return new blogposts.InstantPromise.fromValue("");
+            return deferred.promise;
         };
         LocalStorageBlogPostStore.prototype.get = function (id) {
             var post = this.doWithPosts(function (posts) {
@@ -184,21 +188,21 @@ var blogposts;
                 console.log("Found " + index);
                 return posts[index];
             });
-            return new blogposts.InstantPromise(post);
+            return this.promiseBuilder.fromValue(post);
         };
         LocalStorageBlogPostStore.prototype.remove = function (id) {
-            return new blogposts.InstantPromise(function (posts) {
+            var deferred = this.$q.defer();
+            this.list().then(function (posts) {
                 var newPosts = _.filter(posts, function (post) { return post.id != id; });
                 var difference = posts.length - newPosts.length;
                 localStorage.setItem(LocalStorageBlogPostStore.STORAGE_ID, JSON.stringify(newPosts));
                 console.log("Stored " + newPosts);
-                var p = blogposts.InstantPromise.fromValue(difference);
-                return p;
-            });
+                deferred.resolve(difference);
+            }, function () { throw "Should never happen!"; });
+            return deferred;
         };
-        //list():BlogPost[] {
         LocalStorageBlogPostStore.prototype.list = function () {
-            return blogposts.InstantPromise.fromValue(this.listHelper());
+            return this.promiseBuilder.fromValue(this.listHelper());
         };
         LocalStorageBlogPostStore.prototype.listHelper = function () {
             var result = JSON.parse(localStorage.getItem(LocalStorageBlogPostStore.STORAGE_ID));
@@ -232,6 +236,7 @@ var blogposts;
             return result;
         };
         LocalStorageBlogPostStore.STORAGE_ID = "blog-post-store";
+        LocalStorageBlogPostStore.$inject = ['promiseBuilder', '$q'];
         return LocalStorageBlogPostStore;
     })();
     blogposts.LocalStorageBlogPostStore = LocalStorageBlogPostStore;
@@ -294,45 +299,24 @@ var blogposts;
 var blogposts;
 (function (blogposts) {
     'use strict';
-})(blogposts || (blogposts = {}));
-/// <reference path='../_all.ts' />
-var blogposts;
-(function (blogposts) {
-    'use strict';
-    var AngularPromise = (function () {
-        function AngularPromise(angularPromise) {
-            this.angularPromise = angularPromise;
+    var PromiseBuilder = (function () {
+        function PromiseBuilder($q) {
+            this.$q = $q;
         }
-        AngularPromise.prototype.then = function (successHandler, failureHandler) {
-            this.angularPromise.then(function (response) {
-                successHandler(response);
-            }, function (response) {
-                failureHandler(response);
-            });
+        PromiseBuilder.prototype.fromValue = function (value) {
+            var deferred = this.$q.defer();
+            deferred.resolve(value);
+            return deferred.promise;
         };
-        return AngularPromise;
+        PromiseBuilder.prototype.fromFunction = function (func) {
+            var deferred = this.$q.defer();
+            deferred.resolve(func());
+            return deferred.promise;
+        };
+        PromiseBuilder.$inject = ['$q'];
+        return PromiseBuilder;
     })();
-    blogposts.AngularPromise = AngularPromise;
-})(blogposts || (blogposts = {}));
-/// <reference path='../_all.ts' />
-var blogposts;
-(function (blogposts) {
-    'use strict';
-    var InstantPromise = (function () {
-        function InstantPromise(producer) {
-            this.producer = producer;
-        }
-        InstantPromise.fromValue = function (value) {
-            return new InstantPromise(function () {
-                return value;
-            });
-        };
-        InstantPromise.prototype.then = function (successHandler, failureHandler) {
-            successHandler(this.producer());
-        };
-        return InstantPromise;
-    })();
-    blogposts.InstantPromise = InstantPromise;
+    blogposts.PromiseBuilder = PromiseBuilder;
 })(blogposts || (blogposts = {}));
 /// <reference path='../libs/jquery/jquery.d.ts' />
 /// <reference path='../libs/angular/angular.d.ts' />
@@ -345,9 +329,7 @@ var blogposts;
 /// <reference path='./blogpost/implementations/LocalStorageBlogPostStore.ts' />
 /// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
-/// <reference path='./common/Promise.ts' />
-/// <reference path='./common/AngularPromise.ts' />
-/// <reference path='./common/InstantPromise.ts' />
+/// <reference path='./common/PromiseBuilder.ts' />
 /// <reference path='_all.ts' />
 var blogposts;
 (function (blogposts) {
@@ -359,6 +341,7 @@ var blogposts;
         .controller('authenticationCtrl', blogposts.AuthenticationCtrl)
         .service('blogPostStore', blogposts.LocalStorageBlogPostStore)
         .service('authenticationService', blogposts.AuthenticationService)
+        .service('promiseBuilder', blogposts.PromiseBuilder)
         .config(['$routeProvider',
         function routes($routeProvider) {
             $routeProvider
