@@ -1,9 +1,10 @@
 <div>
   <form onSubmit="">
     <div>Title:</div>
-    <div><input ng-model="newPostTitle" id="new-post-title" style='margin: 5px; border: 1px solid black; width: 95%; height: 20px' type="text"/></div>
+    <div><input ng-model="postEditing.title" id="new-post-title" style='margin: 5px; border: 1px solid black; width: 95%; height: 20px' type="text"/></div>
     <div>Body:</div>
-    <div><textarea ng-model="newPostBody" id="new-post-body" style='margin: 5px; border: 1px solid black; width: 95%; height: 60%'></textarea></div>
+    <div><textarea ng-model="postEditing.body" id="new-post-body" style='margin: 5px; border: 1px solid black; width: 95%; height: 60%'></textarea></div>
+
     <div><button ng-click="vm.save()" type="submit">Save</button></div>
     <div><button ng-click="vm.done()" type="submit">Done</button></div>
     <div><button ng-click="vm.cancel()" type="submit">Cancel</button></div>

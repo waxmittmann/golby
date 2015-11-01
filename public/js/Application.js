@@ -15,8 +15,13 @@ var blogposts;
             console.log("Called constructor!");
         }
         ViewBlogPostCtrl.prototype.loadPosts = function () {
+            var that = this;
             this.blogPostStore.list().then(function (inBlogPosts) {
-                this.blogPosts = inBlogPosts;
+                console.log("Received " + inBlogPosts);
+                _.forEach(inBlogPosts, function (ele) {
+                    console.log(ele);
+                });
+                that.blogPosts = inBlogPosts;
             }, function () {
                 console.log("Error retrieving posts");
             });
@@ -36,8 +41,9 @@ var blogposts;
             });
         };
         ViewBlogPostCtrl.prototype.deletePost = function (id) {
+            var that = this;
             this.blogPostStore.remove(id).then(function () {
-                this.loadPosts();
+                that.loadPosts();
             }, function () {
                 console.log("Error deleting post");
             });
@@ -103,9 +109,10 @@ var blogposts;
             this.$location.path("/");
         };
         CreateBlogPostCtrl.prototype.done = function () {
+            var that = this;
             this.addOrEditPost().then(function () {
                 console.log("Saved successfully");
-                this.$location.path("/");
+                that.$location.path("/");
             }, function () {
                 console.log("Failed to save");
             });
@@ -158,11 +165,17 @@ var blogposts;
             this.$q = $q;
         }
         LocalStorageBlogPostStore.prototype.add = function (newPostData) {
-            return this.doWithPosts(function (posts) {
-                var newPostData = new blogposts.BlogPost(this.nextId(), newPostData.title, newPostData.body);
-                posts.push(newPostData);
-                return newPostData;
+            var that = this;
+            var _newPostData = newPostData;
+            var deferred = this.$q.defer();
+            console.log("here it is: " + JSON.stringify(newPostData));
+            this.doWithPosts(function (posts) {
+                console.log("now it is: " + JSON.stringify(_newPostData));
+                var newBlogPost = new blogposts.BlogPost(that.nextId(), _newPostData.title, _newPostData.body);
+                posts.push(newBlogPost);
+                deferred.resolve(newBlogPost);
             });
+            return deferred.promise;
         };
         LocalStorageBlogPostStore.prototype.edit = function (editedPost) {
             var deferred = this.$q.defer();
@@ -199,7 +212,7 @@ var blogposts;
                 console.log("Stored " + newPosts);
                 deferred.resolve(difference);
             }, function () { throw "Should never happen!"; });
-            return deferred;
+            return deferred.promise;
         };
         LocalStorageBlogPostStore.prototype.list = function () {
             return this.promiseBuilder.fromValue(this.listHelper());
