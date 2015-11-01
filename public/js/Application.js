@@ -12,7 +12,7 @@ var blogposts;
             $scope.vm = this;
             this.loadPosts();
             this.selectedPostId = $routeParams.postId;
-            console.log("Called constructor!");
+            console.log("Called constructor! " + $routeParams.postId);
         }
         ViewBlogPostCtrl.prototype.loadPosts = function () {
             var that = this;
@@ -30,12 +30,15 @@ var blogposts;
             return this.blogPosts;
         };
         ViewBlogPostCtrl.prototype.loadSelectedPost = function () {
+            console.log("Called loadSelectedPost");
             if (!this.selectedPostId) {
                 throw "No post was selected...";
             }
+            var that = this;
             this.blogPostStore.get(this.selectedPostId).then(function (blogPost) {
-                var selectedPost = blogPost;
-                this.$scope.selectedPost = selectedPost;
+                //var selectedPost: BlogPost = blogPost;
+                console.log("Received " + blogPost);
+                that.$scope.selectedPost = blogPost;
             }, function () {
                 console.log("Error retrieving posts");
             });
@@ -99,7 +102,9 @@ var blogposts;
             }
         };
         CreateBlogPostCtrl.prototype.save = function () {
-            this.addOrEditPost().then(function () {
+            var that = this;
+            this.addOrEditPost().then(function (post) {
+                that.$scope.postEditing = post;
                 console.log("Saved successfully");
             }, function () {
                 console.log("Failed to save");
