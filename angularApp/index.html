@@ -1,0 +1,26 @@
+<html lang="en" ng-app="golby" data-framework="typescript">
+  <head>
+    <link rel="stylesheet" type="text/css" href="blog.css"></link>
+    <meta charset="utf-8">
+    <title>Golby!</title>
+  </head>
+
+  <body ng-controller="authenticationCtrl as auth">
+    <h1 class="blog-title">This is a blog</h1>
+    <div ng-show="loggedIn">Hi admin!</div>
+
+    <div class="blog-menu" ng-cloak>
+      <a href="/#/">View</a> | 
+      <a href="/#/login">Log in</a>  |
+      <a href="/#/admin/posts" ng-show="auth.vm.showAdminControls()">New</a>
+    </div>
+
+    <div ng-view></div>
+  </body>
+
+  <script src="node_modules/angular/angular.js"></script>
+  <script src="node_modules/angular-route/angular-route.js"></script>
+  <script src="node_modules/underscore/underscore.js"></script>
+  <script src="node_modules/jquery/dist/jquery.js"></script>
+  <script src="js/Application.js"></script>
+</html>

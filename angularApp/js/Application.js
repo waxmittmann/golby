@@ -12,7 +12,7 @@ var blogposts;
             $scope.vm = this;
             this.loadPosts();
             this.selectedPostId = $routeParams.postId;
-            console.log("Called constructor! " + $routeParams.postId);
+            console.log("Called constructor!");
         }
         ViewBlogPostCtrl.prototype.loadPosts = function () {
             var that = this;
@@ -30,23 +30,19 @@ var blogposts;
             return this.blogPosts;
         };
         ViewBlogPostCtrl.prototype.loadSelectedPost = function () {
-            console.log("Called loadSelectedPost");
             if (!this.selectedPostId) {
                 throw "No post was selected...";
             }
-            var that = this;
             this.blogPostStore.get(this.selectedPostId).then(function (blogPost) {
-                //var selectedPost: BlogPost = blogPost;
-                console.log("Received " + blogPost);
-                that.$scope.selectedPost = blogPost;
+                var selectedPost = blogPost;
+                this.$scope.selectedPost = selectedPost;
             }, function () {
                 console.log("Error retrieving posts");
             });
         };
         ViewBlogPostCtrl.prototype.deletePost = function (id) {
-            var that = this;
             this.blogPostStore.remove(id).then(function () {
-                that.loadPosts();
+                this.loadPosts();
             }, function () {
                 console.log("Error deleting post");
             });
@@ -102,9 +98,7 @@ var blogposts;
             }
         };
         CreateBlogPostCtrl.prototype.save = function () {
-            var that = this;
-            this.addOrEditPost().then(function (post) {
-                that.$scope.postEditing = post;
+            this.addOrEditPost().then(function () {
                 console.log("Saved successfully");
             }, function () {
                 console.log("Failed to save");
@@ -114,10 +108,9 @@ var blogposts;
             this.$location.path("/");
         };
         CreateBlogPostCtrl.prototype.done = function () {
-            var that = this;
             this.addOrEditPost().then(function () {
                 console.log("Saved successfully");
-                that.$location.path("/");
+                this.$location.path("/");
             }, function () {
                 console.log("Failed to save");
             });
@@ -176,9 +169,9 @@ var blogposts;
             console.log("here it is: " + JSON.stringify(newPostData));
             this.doWithPosts(function (posts) {
                 console.log("now it is: " + JSON.stringify(_newPostData));
-                var newBlogPost = new blogposts.BlogPost(that.nextId(), _newPostData.title, _newPostData.body);
-                posts.push(newBlogPost);
-                deferred.resolve(newBlogPost);
+                _newPostData = new blogposts.BlogPost(that.nextId(), _newPostData.title, _newPostData.body);
+                posts.push(_newPostData);
+                deferred.resolve(_newPostData);
             });
             return deferred.promise;
         };
@@ -217,7 +210,7 @@ var blogposts;
                 console.log("Stored " + newPosts);
                 deferred.resolve(difference);
             }, function () { throw "Should never happen!"; });
-            return deferred.promise;
+            return deferred;
         };
         LocalStorageBlogPostStore.prototype.list = function () {
             return this.promiseBuilder.fromValue(this.listHelper());
@@ -258,105 +251,6 @@ var blogposts;
         return LocalStorageBlogPostStore;
     })();
     blogposts.LocalStorageBlogPostStore = LocalStorageBlogPostStore;
-})(blogposts || (blogposts = {}));
-/// <reference path='../../_all.ts' />
-var blogposts;
-(function (blogposts) {
-    'use strict';
-    //$http({
-    //    method: 'GET',
-    //    url: '/someUrl'
-    //}).then(function successCallback(response) {
-    //    // this callback will be called asynchronously
-    //    // when the response is available
-    //}, function errorCallback(response) {
-    //    // called asynchronously if an error occurs
-    //    // or server returns response with an error status.
-    //});
-    var RemoteBlogPostStore = (function () {
-        function RemoteBlogPostStore($q, $http) {
-            this.$q = $q;
-            this.$http = $http;
-        }
-        RemoteBlogPostStore.prototype.add = function (newPost) {
-            var deferred = this.$q.defer();
-            this.$http({
-                method: 'PUT',
-                url: '/posts/',
-                data: JSON.stringify({
-                    'title': newPost.title,
-                    'body': newPost.body
-                })
-            }).then(function (result) {
-                var parsedJson = JSON.parse(result);
-                deferred.resolve(new blogposts.BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
-            }, function (error) {
-                console.log("Had error " + error);
-            });
-            return deferred.promise;
-        };
-        RemoteBlogPostStore.prototype.edit = function (editedPost) {
-            var deferred = this.$q.defer();
-            this.$http({
-                method: 'PUT',
-                url: '/posts/' + editedPost.id,
-                data: JSON.stringify(editedPost)
-            }).then(function (result) {
-                var parsedJson = JSON.parse(result);
-                deferred.resolve(new blogposts.BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
-            }, function (error) {
-                console.log("Had error " + error);
-            });
-            return deferred.promise;
-        };
-        RemoteBlogPostStore.prototype.get = function (id) {
-            var deferred = this.$q.defer();
-            this.$http({
-                method: 'GET',
-                url: '/posts/' + id
-            }).then(function (result) {
-                var parsedJson = JSON.parse(result);
-                deferred.resolve(new blogposts.BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
-            }, function (error) {
-                console.log("Had error " + error);
-            });
-            return deferred.promise;
-        };
-        RemoteBlogPostStore.prototype.remove = function (id) {
-            var deferred = this.$q.defer();
-            this.$http({
-                method: 'DELETE',
-                url: '/posts' + id
-            }).then(function (result) {
-                deferred.resolve(Number(result));
-            }, function (error) {
-                console.log("Had error " + error);
-            });
-            return deferred.promise;
-        };
-        RemoteBlogPostStore.prototype.list = function () {
-            var deferred = this.$q.defer();
-            this.$http({
-                method: 'GET',
-                url: '/posts'
-            }).then(function (result) {
-                var parsedJson = JSON.parse(result);
-                var posts = new Array();
-                var i = 0;
-                for (; i < parsedJson.length; i++) {
-                    var post = parsedJson[i];
-                    posts.push(new blogposts.BlogPost(post.id, post.title, post.body));
-                }
-                deferred.resolve(posts);
-            }, function (error) {
-                console.log("Had error " + error);
-            });
-            return deferred.promise;
-        };
-        RemoteBlogPostStore.$inject = ['$q', '$http'];
-        return RemoteBlogPostStore;
-    })();
-    blogposts.RemoteBlogPostStore = RemoteBlogPostStore;
 })(blogposts || (blogposts = {}));
 /// <reference path='../_all.ts' />
 var blogposts;
@@ -444,7 +338,6 @@ var blogposts;
 /// <reference path='./blogpost/BlogPost.ts' />
 /// <reference path='./blogpost/BlogPostStore.ts' />
 /// <reference path='./blogpost/implementations/LocalStorageBlogPostStore.ts' />
-/// <reference path='./blogpost/implementations/RemoteBlogPostStore.ts' />
 /// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
 /// <reference path='./common/PromiseBuilder.ts' />
@@ -457,7 +350,7 @@ var blogposts;
         .controller('viewBlogPostCtrl', blogposts.ViewBlogPostCtrl)
         .controller('createBlogPostCtrl', blogposts.CreateBlogPostCtrl)
         .controller('authenticationCtrl', blogposts.AuthenticationCtrl)
-        .service('blogPostStore', blogposts.RemoteBlogPostStore)
+        .service('blogPostStore', blogposts.LocalStorageBlogPostStore)
         .service('authenticationService', blogposts.AuthenticationService)
         .service('promiseBuilder', blogposts.PromiseBuilder)
         .config(['$routeProvider',
