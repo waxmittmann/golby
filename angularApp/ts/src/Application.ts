@@ -8,9 +8,13 @@ module blogposts {
             .controller('viewBlogPostCtrl', ViewBlogPostCtrl)
             .controller('createBlogPostCtrl', CreateBlogPostCtrl)
             .controller('authenticationCtrl', AuthenticationCtrl)
+            .controller('alertsCtrl', AlertsCtrl)
+
             .service('blogPostStore', RemoteBlogPostStore)
             .service('authenticationService', AuthenticationService)
+            .service('alertsService', AlertsService)
             .service('promiseBuilder', PromiseBuilder)
+
             .config(['$routeProvider',
                 function routes($routeProvider: ng.route.IRouteProvider) {
                     $routeProvider

@@ -416,6 +416,72 @@ var blogposts;
 var blogposts;
 (function (blogposts) {
     'use strict';
+    (function (AlertType) {
+        AlertType[AlertType["SUCCESS"] = 0] = "SUCCESS";
+        AlertType[AlertType["INFO"] = 1] = "INFO";
+        AlertType[AlertType["WARNING"] = 2] = "WARNING";
+        AlertType[AlertType["ERROR"] = 3] = "ERROR";
+    })(blogposts.AlertType || (blogposts.AlertType = {}));
+    var AlertType = blogposts.AlertType;
+    ;
+    var AlertsService = (function () {
+        function AlertsService() {
+            this.receivers = [];
+        }
+        AlertsService.prototype.success = function (message) {
+            this.send(AlertType.SUCCESS, message);
+        };
+        AlertsService.prototype.info = function (message) {
+            this.send(AlertType.INFO, message);
+        };
+        AlertsService.prototype.warning = function (message) {
+            this.send(AlertType.WARNING, message);
+        };
+        AlertsService.prototype.error = function (message) {
+            this.send(AlertType.ERROR, message);
+        };
+        AlertsService.prototype.send = function (type, message) {
+            var _type = type;
+            var _message = message;
+            _.forEach(this.receivers, function (receiver) {
+                receiver.receive(_type, _message);
+            });
+        };
+        AlertsService.prototype.register = function (receiver) {
+            this.receivers.push(receiver);
+        };
+        AlertsService.$inject = [];
+        return AlertsService;
+    })();
+    blogposts.AlertsService = AlertsService;
+})(blogposts || (blogposts = {}));
+/// <reference path='../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+    var AlertsCtrl = (function () {
+        function AlertsCtrl($scope, alertsService) {
+            this.$scope = $scope;
+            this.alertsService = alertsService;
+        }
+        AlertsCtrl.prototype.receive = function (type, message) {
+            this.$scope.alert = {
+                'type': type,
+                'message': message
+            };
+        };
+        AlertsCtrl.$inject = [
+            '$scope',
+            'alertsService'
+        ];
+        return AlertsCtrl;
+    })();
+    blogposts.AlertsCtrl = AlertsCtrl;
+})(blogposts || (blogposts = {}));
+/// <reference path='../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
     var PromiseBuilder = (function () {
         function PromiseBuilder($q) {
             this.$q = $q;
@@ -447,6 +513,8 @@ var blogposts;
 /// <reference path='./blogpost/implementations/RemoteBlogPostStore.ts' />
 /// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
+/// <reference path='./alerts/AlertsService.ts' />
+/// <reference path='./alerts/AlertsCtrl.ts' />
 /// <reference path='./common/PromiseBuilder.ts' />
 /// <reference path='_all.ts' />
 var blogposts;
@@ -457,8 +525,10 @@ var blogposts;
         .controller('viewBlogPostCtrl', blogposts.ViewBlogPostCtrl)
         .controller('createBlogPostCtrl', blogposts.CreateBlogPostCtrl)
         .controller('authenticationCtrl', blogposts.AuthenticationCtrl)
+        .controller('alertsCtrl', blogposts.AlertsCtrl)
         .service('blogPostStore', blogposts.RemoteBlogPostStore)
         .service('authenticationService', blogposts.AuthenticationService)
+        .service('alertsService', blogposts.AlertsService)
         .service('promiseBuilder', blogposts.PromiseBuilder)
         .config(['$routeProvider',
         function routes($routeProvider) {

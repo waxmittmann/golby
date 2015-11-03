@@ -15,4 +15,7 @@
 /// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
 
+/// <reference path='./alerts/AlertsService.ts' />
+/// <reference path='./alerts/AlertsCtrl.ts' />
+
 /// <reference path='./common/PromiseBuilder.ts' />
