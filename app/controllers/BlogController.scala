@@ -1,10 +1,12 @@
 package controllers
 
 import play.api.libs.json._
+import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, Controller}
 import play.api.libs.functional.syntax._
 
 case class BlogPost(id: Long, title: String, body: String)
+
 case class BlogPostWithoutId(title: String, body: String) {
   def toBlogPost(id: Long): BlogPost = {
     BlogPost(id, title, body)
@@ -39,29 +41,22 @@ object BlogController extends Controller {
     BlogPost(2l, "Second Post", "... does too"),
     BlogPost(3l, "Third Post", "... is the best")
   )
-
-
-  def add() = Action { implicit request =>
-    request.body.asJson.flatMap(json => {
-      blogPostWithoutIdReads.reads(json).asOpt.flatMap(blogPostWithoutId => {
-//          val blogPostWithId = BlogPost(nextId, "snoot", "poot")
-          val nextId = posts.min.id + 1;
-          val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
-          println(request.body)
+  
+  def add() = Action {
+    def createBlogEntry(blogPostWithoutId: BlogPostWithoutId): BlogPost = {
+      val nextId = posts.min.id + 1;
+      val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
+      blogPostWithId
+    }
+    implicit request =>
+      request.body.asJson.flatMap(json => {
+        blogPostWithoutIdReads.reads(json).asOpt.flatMap(blogPostWithoutId => {
+          val blogPostWithId: BlogPost = createBlogEntry(blogPostWithoutId)
           posts ::= blogPostWithId
-          Some(Ok(Json.toJson(blogPostWithId)))
+          Some(Ok(toJson(blogPostWithId)))
         }
-      )
-    }).getOrElse(BadRequest("Something went nasty"))
-
-//    val blogPost = blogPostWithoutIdReads.reads(request.body.asJson).asOpt.getOrElse()
-//    val blogPostWithId = BlogPost(nextId, blogPost.title, blogPost.body)
-
-
-//    val blogPostWithId = BlogPost(nextId, "snoot", "poot")
-//    println(request.body)
-//    posts ::= blogPostWithId
-//    Ok(Json.toJson(blogPostWithId))
+        )
+      }).getOrElse(BadRequest("Something went nasty"))
   }
 
   def list = Action {
