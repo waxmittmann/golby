@@ -1,4 +1,4 @@
-/// <reference path='../../_all.ts' />
+/// <reference path='../../../_all.ts' />
 
 module blogposts {
     'use strict';
@@ -15,9 +15,7 @@ module blogposts {
             var that = this;
             var _newPostData = newPostData;
             var deferred: ng.IDeferred<BlogPost> = this.$q.defer();
-            console.log("here it is: " + JSON.stringify(newPostData));
             this.doWithPosts(function (posts:BlogPost[]) {
-                console.log("now it is: " + JSON.stringify(_newPostData));
                 var newBlogPost = new BlogPost(that.nextId(), _newPostData.title, _newPostData.body);
                 posts.push(newBlogPost);
                 deferred.resolve(newBlogPost);
@@ -66,7 +64,6 @@ module blogposts {
                     var newPosts = _.filter(posts, function(post: BlogPost) { return post.id != id});
                     var difference: number = posts.length - newPosts.length;
                     localStorage.setItem(LocalStorageBlogPostStore.STORAGE_ID, JSON.stringify(newPosts));
-                    console.log("Stored " + newPosts);
                     deferred.resolve(difference);
                 },
                 function() { throw "Should never happen!"; }

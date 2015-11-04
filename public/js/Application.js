@@ -153,7 +153,7 @@ var blogposts;
     })();
     blogposts.BlogPost = BlogPost;
 })(blogposts || (blogposts = {}));
-/// <reference path='../_all.ts' />
+/// <reference path='../../_all.ts' />
 var blogposts;
 (function (blogposts) {
     'use strict';
@@ -166,7 +166,7 @@ var blogposts;
     })();
     blogposts.BlogPostData = BlogPostData;
 })(blogposts || (blogposts = {}));
-/// <reference path='../../_all.ts' />
+/// <reference path='../../../_all.ts' />
 var blogposts;
 (function (blogposts) {
     'use strict';
@@ -179,9 +179,7 @@ var blogposts;
             var that = this;
             var _newPostData = newPostData;
             var deferred = this.$q.defer();
-            console.log("here it is: " + JSON.stringify(newPostData));
             this.doWithPosts(function (posts) {
-                console.log("now it is: " + JSON.stringify(_newPostData));
                 var newBlogPost = new blogposts.BlogPost(that.nextId(), _newPostData.title, _newPostData.body);
                 posts.push(newBlogPost);
                 deferred.resolve(newBlogPost);
@@ -220,7 +218,6 @@ var blogposts;
                 var newPosts = _.filter(posts, function (post) { return post.id != id; });
                 var difference = posts.length - newPosts.length;
                 localStorage.setItem(LocalStorageBlogPostStore.STORAGE_ID, JSON.stringify(newPosts));
-                console.log("Stored " + newPosts);
                 deferred.resolve(difference);
             }, function () { throw "Should never happen!"; });
             return deferred.promise;
@@ -265,7 +262,7 @@ var blogposts;
     })();
     blogposts.LocalStorageBlogPostStore = LocalStorageBlogPostStore;
 })(blogposts || (blogposts = {}));
-/// <reference path='../../_all.ts' />
+/// <reference path='../../../_all.ts' />
 var blogposts;
 (function (blogposts) {
     'use strict';
@@ -305,8 +302,6 @@ var blogposts;
                 data: JSON.stringify(editedPost)
             }).then(function (result) {
                 deferred.resolve(result.data);
-                // var parsedJson = JSON.parse(result);
-                // deferred.resolve(new BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
             }, function (error) {
                 console.log("Had error " + error);
                 deferred.reject("Had error " + error);
@@ -513,9 +508,9 @@ var blogposts;
 /// <reference path='./viewblogposts/ViewBlogPostCtrl.ts' />
 /// <reference path='./createblogpost/CreateBlogPostCtrl.ts' />
 /// <reference path='./blogpost/BlogPost.ts' />
-/// <reference path='./blogpost/BlogPostStore.ts' />
-/// <reference path='./blogpost/implementations/LocalStorageBlogPostStore.ts' />
-/// <reference path='./blogpost/implementations/RemoteBlogPostStore.ts' />
+/// <reference path='./blogpost/store/BlogPostStore.ts' />
+/// <reference path='./blogpost/store/implementations/LocalStorageBlogPostStore.ts' />
+/// <reference path='./blogpost/store/implementations/RemoteBlogPostStore.ts' />
 /// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
 /// <reference path='./alerts/AlertsService.ts' />

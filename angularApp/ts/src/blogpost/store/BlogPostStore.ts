@@ -1,5 +1,4 @@
-/// <reference path='../_all.ts' />
-
+/// <reference path='../../_all.ts' />
 
 module blogposts {
     'use strict';

@@ -8,9 +8,9 @@
 /// <reference path='./createblogpost/CreateBlogPostCtrl.ts' />
 
 /// <reference path='./blogpost/BlogPost.ts' />
-/// <reference path='./blogpost/BlogPostStore.ts' />
-/// <reference path='./blogpost/implementations/LocalStorageBlogPostStore.ts' />
-/// <reference path='./blogpost/implementations/RemoteBlogPostStore.ts' />
+/// <reference path='./blogpost/store/BlogPostStore.ts' />
+/// <reference path='./blogpost/store/implementations/LocalStorageBlogPostStore.ts' />
+/// <reference path='./blogpost/store/implementations/RemoteBlogPostStore.ts' />
 
 /// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
