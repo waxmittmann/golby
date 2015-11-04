@@ -7,6 +7,7 @@ module blogposts {
         public static $inject = [
             'blogPostStore',
             'authenticationService',
+            'alertsService',
             '$scope',
             '$location',
             '$routeParams'
@@ -21,6 +22,7 @@ module blogposts {
 
         constructor(private blogPostStore : BlogPostStore,
                     private authenticationService : AuthenticationService,
+                    private alertsService: AlertsService,
                     private $scope,
                     private $location : ng.ILocationService,
                     private $routeParams) {
@@ -42,6 +44,7 @@ module blogposts {
                 },
                 function () {
                     console.log("Error retrieving posts");
+                    that.alertsService.error("Error retrieving posts");
                 }
             );
         }
@@ -63,6 +66,7 @@ module blogposts {
                     that.$scope.selectedPost = blogPost;
                 },
                 function () {
+                    that.alertsService.error("Error retrieving posts");
                     console.log("Error retrieving posts");
                 }
             )
@@ -75,6 +79,7 @@ module blogposts {
                     that.loadPosts();
                 },
                 function() {
+                    that.alertsService.error("Error deleting post");
                     console.log("Error deleting post");
                 }
             )

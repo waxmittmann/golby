@@ -32,6 +32,8 @@ module blogposts {
     }
 
     private send(type: AlertType, message: string) {
+      console.log("Sending!");
+
       var _type = type;
       var _message = message;
       _.forEach(this.receivers, function(receiver) {
@@ -40,6 +42,7 @@ module blogposts {
     }
 
     register(receiver: AlertsReceiver) {
+      console.log("registered " + receiver);
       this.receivers.push(receiver);
     }
 
