@@ -27,8 +27,8 @@ module blogposts {
                     'body': newPost.body
                 })
             }).then(
-                function(result: BlogPost) {
-                    deferred.resolve(result);
+                function(result: ServerResponse) {
+                    deferred.resolve(result.data);
                 },
                 function(error) {
                     console.log("Had error " + error);
@@ -47,9 +47,8 @@ module blogposts {
                 url: '/posts/' + editedPost.id,
                 data: JSON.stringify(editedPost)
             }).then(
-                function(result: string) {
-                    var parsedJson = JSON.parse(result);
-                    deferred.resolve(new BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
+                function(result: ServerResponse) {
+                    deferred.resolve(result.data);
                 },
                 function(error) {
                     console.log("Had error " + error);
@@ -67,9 +66,8 @@ module blogposts {
                 method: 'GET',
                 url: '/posts/' + id
             }).then(
-                function(result: string) {
-                    var parsedJson = JSON.parse(result);
-                    deferred.resolve(new BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
+                function(result: ServerResponse) {
+                    deferred.resolve(result.data);
                 },
                 function(error) {
                     console.log("Had error " + error);
@@ -85,7 +83,7 @@ module blogposts {
 
             this.$http({
                 method: 'DELETE',
-                url: '/posts' + id
+                url: '/posts/' + id
             }).then(
                 function(result: string) {
                     deferred.resolve(Number(result));
@@ -107,12 +105,7 @@ module blogposts {
                 url: '/posts'
             }).then(
                 function(result: ServerResponse) {
-                    deferred.resolve(
-                        _.map(result.data, function(rawPost) {
-                            console.log(rawPost);
-                            return new BlogPost(rawPost["id"], rawPost["title"], rawPost["body"]);
-                        })
-                    );
+                  deferred.resolve(result.data);
                 },
                 function(error) {
                     console.log("Had error " + error);

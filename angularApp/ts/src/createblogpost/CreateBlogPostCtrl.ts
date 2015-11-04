@@ -20,6 +20,7 @@ module blogposts {
                     private $location:ng.ILocationService,
                     private $routeParams) {
             $scope.vm = this;
+            var that = this;
 
             if (!authenticationService.isLoggedIn()) {
                 this.$location.path("/login");
@@ -31,9 +32,11 @@ module blogposts {
                     function(blogPost) {
                         var postToEdit : BlogPostData = blogPost;
                         if (!postToEdit) {
-                            throw "Post with id " + $scope.newPostId + " not found";
+                            throw "Post with id " + that.$scope.newPostId + " not found";
                         }
-                        $scope.postEditing = postToEdit;
+                        that.$scope.postEditing = postToEdit;
+                        console.log("Now editing ");
+                        console.log(that.$scope.postEditing);
                     },
                     function(error) {
                         console.log("Failed to load post");

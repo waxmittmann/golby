@@ -2,7 +2,7 @@ package controllers
 
 import play.api.libs.json._
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{AnyContent, Results, Action, Controller}
 import play.api.libs.functional.syntax._
 
 case class BlogPost(id: Long, title: String, body: String)
@@ -28,6 +28,13 @@ object BlogController extends Controller {
         (JsPath \ "body").read[String]
     )(BlogPostWithoutId.apply _)
 
+  implicit val blogPostReads: Reads[BlogPost] = (
+        (JsPath \ "id").read[Long] and
+        (JsPath \ "title").read[String] and
+        (JsPath \ "body").read[String]
+    )(BlogPost.apply _)
+
+
   implicit val blogPostCompareById = new Ordering[BlogPost] {
     override def compare(x: BlogPost, y: BlogPost): Int = {
       return if (x.id - y.id > 0) 1
@@ -43,7 +50,6 @@ object BlogController extends Controller {
   )
 
   def createBlogEntry(blogPostWithoutId: BlogPostWithoutId): BlogPost = {
-//    val nextId = posts.values.min.id + 1;
     val nextId = posts.keys.max + 1;
     val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
     blogPostWithId
@@ -63,6 +69,42 @@ object BlogController extends Controller {
 
   def list = Action {
     Ok(Json.toJson(posts.values))
+  }
+
+  def get(id: Long) = Action {
+    //Must be a 'scalarier' way of doing this
+    if (posts.contains(id)) {
+      Ok(toJson(posts.get(id)))
+    } else {
+      NotFound("No post with id " + id)
+    }
+  }
+
+  def delete(id: Long) = Action {
+    //Must be a 'scalarier' way of doing this
+    if (posts.contains(id)) {
+      Ok(toJson((posts -= id).values))
+    } else {
+      NotFound("No post with id " + id)
+    }
+
+    Ok(Json.toJson(posts.values))
+  }
+
+  def edit(id: Long): Action[AnyContent] = play.api.mvc.Action {
+    implicit request =>
+      val result = request.body.asJson.flatMap(json => {
+        blogPostReads.reads(json).asOpt.flatMap((blogPost: BlogPost) => {
+          if (blogPost.id != id) {
+            Some(BadRequest("id in path does not equal post id"))
+          } else {
+            posts.put(blogPost.id, blogPost)
+            Some(Ok(toJson(blogPost)))
+          }
+        })
+      }).getOrElse(BadRequest("Something went nasty"))
+
+      result
   }
 
 }

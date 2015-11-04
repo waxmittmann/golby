@@ -4,17 +4,19 @@
 
 
 # Home page
-GET         /             controllers.Application.index()
+GET         /                 controllers.Application.index()
 
 # Test controller
-GET         /test         controllers.TestController.list
-POST        /test         controllers.TestController.add(cheese: String)
-POST        /goo          controllers.TestController.goo()
+GET         /test             controllers.TestController.list
+POST        /test             controllers.TestController.add(cheese: String)
+POST        /goo              controllers.TestController.goo()
 
 # Blog post controller
-GET         /posts        controllers.BlogController.list
-#POST        /posts        controllers.BlogController.add(blogPost: BlogPost)
-POST        /posts        controllers.BlogController.add
+GET         /posts            controllers.BlogController.list
+POST        /posts            controllers.BlogController.add
+GET         /posts/:id        controllers.BlogController.get(id: Long)
+PUT         /posts/:id        controllers.BlogController.edit(id: Long)
+DELETE      /posts/:id        controllers.BlogController.delete(id: Long)
 
 # Map the JS resource paths
-GET         /*file        controllers.Assets.versioned(path="/public", file: Asset)
+GET         /*file            controllers.Assets.versioned(path="/public", file: Asset)

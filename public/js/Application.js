@@ -77,6 +77,7 @@ var blogposts;
             this.$location = $location;
             this.$routeParams = $routeParams;
             $scope.vm = this;
+            var that = this;
             if (!authenticationService.isLoggedIn()) {
                 this.$location.path("/login");
             }
@@ -85,9 +86,11 @@ var blogposts;
                 blogPostStore.get($scope.newPostId).then(function (blogPost) {
                     var postToEdit = blogPost;
                     if (!postToEdit) {
-                        throw "Post with id " + $scope.newPostId + " not found";
+                        throw "Post with id " + that.$scope.newPostId + " not found";
                     }
-                    $scope.postEditing = postToEdit;
+                    that.$scope.postEditing = postToEdit;
+                    console.log("Now editing ");
+                    console.log(that.$scope.postEditing);
                 }, function (error) {
                     console.log("Failed to load post");
                 });
@@ -287,7 +290,7 @@ var blogposts;
                     'body': newPost.body
                 })
             }).then(function (result) {
-                deferred.resolve(result);
+                deferred.resolve(result.data);
             }, function (error) {
                 console.log("Had error " + error);
                 deferred.reject("Had error " + error);
@@ -301,8 +304,9 @@ var blogposts;
                 url: '/posts/' + editedPost.id,
                 data: JSON.stringify(editedPost)
             }).then(function (result) {
-                var parsedJson = JSON.parse(result);
-                deferred.resolve(new blogposts.BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
+                deferred.resolve(result.data);
+                // var parsedJson = JSON.parse(result);
+                // deferred.resolve(new BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
             }, function (error) {
                 console.log("Had error " + error);
                 deferred.reject("Had error " + error);
@@ -315,8 +319,7 @@ var blogposts;
                 method: 'GET',
                 url: '/posts/' + id
             }).then(function (result) {
-                var parsedJson = JSON.parse(result);
-                deferred.resolve(new blogposts.BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
+                deferred.resolve(result.data);
             }, function (error) {
                 console.log("Had error " + error);
                 deferred.reject("Had error " + error);
@@ -327,7 +330,7 @@ var blogposts;
             var deferred = this.$q.defer();
             this.$http({
                 method: 'DELETE',
-                url: '/posts' + id
+                url: '/posts/' + id
             }).then(function (result) {
                 deferred.resolve(Number(result));
             }, function (error) {
@@ -342,10 +345,7 @@ var blogposts;
                 method: 'GET',
                 url: '/posts'
             }).then(function (result) {
-                deferred.resolve(_.map(result.data, function (rawPost) {
-                    console.log(rawPost);
-                    return new blogposts.BlogPost(rawPost["id"], rawPost["title"], rawPost["body"]);
-                }));
+                deferred.resolve(result.data);
             }, function (error) {
                 console.log("Had error " + error);
                 deferred.reject("Had error " + error);
