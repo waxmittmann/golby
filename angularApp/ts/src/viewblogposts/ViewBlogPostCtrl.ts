@@ -61,8 +61,6 @@ module blogposts {
             var that = this;
             this.blogPostStore.get(this.selectedPostId).then(
                 function (blogPost: BlogPost) {
-                    //var selectedPost: BlogPost = blogPost;
-                    console.log("Received " + blogPost);
                     that.$scope.selectedPost = blogPost;
                 },
                 function () {

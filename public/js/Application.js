@@ -38,8 +38,6 @@ var blogposts;
             }
             var that = this;
             this.blogPostStore.get(this.selectedPostId).then(function (blogPost) {
-                //var selectedPost: BlogPost = blogPost;
-                console.log("Received " + blogPost);
                 that.$scope.selectedPost = blogPost;
             }, function () {
                 that.alertsService.error("Error retrieving posts");
@@ -268,16 +266,6 @@ var blogposts;
 var blogposts;
 (function (blogposts) {
     'use strict';
-    //$http({
-    //    method: 'GET',
-    //    url: '/someUrl'
-    //}).then(function successCallback(response) {
-    //    // this callback will be called asynchronously
-    //    // when the response is available
-    //}, function errorCallback(response) {
-    //    // called asynchronously if an error occurs
-    //    // or server returns response with an error status.
-    //});
     var ServerResponse = (function () {
         function ServerResponse(data) {
             this.data = data;
@@ -299,9 +287,6 @@ var blogposts;
                     'body': newPost.body
                 })
             }).then(function (result) {
-                // function(result: string) {
-                // var parsedJson = JSON.parse(result);
-                // deferred.resolve(new BlogPost(parsedJson.id, parsedJson.title, parsedJson.body));
                 deferred.resolve(result);
             }, function (error) {
                 console.log("Had error " + error);
@@ -351,67 +336,16 @@ var blogposts;
             });
             return deferred.promise;
         };
-        //{data: Array[3], status: 200, config: Object, statusText: "OK"}config: Objectdata: Array[3]headers: (name)status: 200statusText: "OK"__proto__: Object
         RemoteBlogPostStore.prototype.list = function () {
             var deferred = this.$q.defer();
             this.$http({
                 method: 'GET',
                 url: '/posts'
             }).then(function (result) {
-                // var posts: BlogPost[] = new Array<BlogPost>();
-                // console.log("Have ");
-                // console.log(result);
-                // var jsonData = JSON.parse(result);
-                // for (var i = 0; i < jsonData.counters.length; i++) {
-                //     var counter = jsonData.counters[i];
-                //     console.log(counter.counter_name);
-                // }
-                // console.log("Got " + jsonData);
-                // deferred.resolve("");
-                // var posts: BlogPost[] = new Array<BlogPost>();
-                // var i = 0;
-                // for (; i < result.length; i++) {
-                //   var parsedJson;
-                //   try {
-                //     parsedJson = JSON.parse(result);
-                //   } catch (err) {
-                //     deferred.reject("Failed to parse: " + err);
-                //     return;
-                //   }
-                //
-                //   posts.push(new BlogPost(parsedJson.id, parsedJson.title, parsedJson.body))
-                // }
-                // deferred.resolve(posts);
                 deferred.resolve(_.map(result.data, function (rawPost) {
                     console.log(rawPost);
-                    // console.log(rawPost.id + ", " + rawPost.title + ", " + rawPost.body);
-                    // var post = JSON.parse(rawPost);
-                    // return new BlogPost(post.id, post.title, post.body);
-                    // return new BlogPost(rawPost.id, rawPost.title, rawPost.body);
                     return new blogposts.BlogPost(rawPost["id"], rawPost["title"], rawPost["body"]);
-                    // return "";
                 }));
-                //
-                // var rawJson: string = result.data;
-                //
-                // console.log(result.data);
-                //
-                // var parsedJson;
-                // try {
-                //   parsedJson = JSON.parse(result.data);
-                // } catch (err) {
-                //   console.log("Failed to parse: " + err);
-                //   deferred.reject("Failed to parse: " + err);
-                //   return;
-                // }
-                // var posts: BlogPost[] = new Array<BlogPost>();
-                // var i = 0;
-                // for (; i < parsedJson.length; i++) {
-                //     var post = parsedJson[i];
-                //     posts.push(new BlogPost(post.id, post.title, post.body))
-                // }
-                // console.log("Resolved! ");
-                // deferred.resolve(posts);
             }, function (error) {
                 console.log("Had error " + error);
                 deferred.reject("Had error " + error);
