@@ -36,23 +36,25 @@ object BlogController extends Controller {
     }
   }
 
-  var posts: List[BlogPost] = List(
-    BlogPost(1l, "First Post", "... has a body"),
-    BlogPost(2l, "Second Post", "... does too"),
-    BlogPost(3l, "Third Post", "... is the best")
+  var posts: scala.collection.mutable.Map[Long, BlogPost] = scala.collection.mutable.Map(
+    (1l, BlogPost(1l, "First Post", "... has a body")),
+    (2l, BlogPost(2l, "Second Post", "... does too")),
+    (3l, BlogPost(3l, "Third Post", "... is the best"))
   )
-  
+
+  def createBlogEntry(blogPostWithoutId: BlogPostWithoutId): BlogPost = {
+//    val nextId = posts.values.min.id + 1;
+    val nextId = posts.keys.max + 1;
+    val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
+    blogPostWithId
+  }
+
   def add() = Action {
-    def createBlogEntry(blogPostWithoutId: BlogPostWithoutId): BlogPost = {
-      val nextId = posts.min.id + 1;
-      val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
-      blogPostWithId
-    }
     implicit request =>
       request.body.asJson.flatMap(json => {
         blogPostWithoutIdReads.reads(json).asOpt.flatMap(blogPostWithoutId => {
           val blogPostWithId: BlogPost = createBlogEntry(blogPostWithoutId)
-          posts ::= blogPostWithId
+          posts.put(blogPostWithId.id, blogPostWithId)
           Some(Ok(toJson(blogPostWithId)))
         }
         )
@@ -60,7 +62,7 @@ object BlogController extends Controller {
   }
 
   def list = Action {
-    Ok(Json.toJson(posts))
+    Ok(Json.toJson(posts.values))
   }
 
 }
