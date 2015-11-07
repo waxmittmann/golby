@@ -1,17 +1,9 @@
-package controllers
+package blog
 
-import play.api.libs.json._
-import play.api.libs.json.Json.toJson
-import play.api.mvc.{AnyContent, Results, Action, Controller}
+import play.api.libs.json.Json._
+import play.api.libs.json.{JsPath, Json, Reads, Writes}
+import play.api.mvc.{Action, AnyContent, Controller}
 import play.api.libs.functional.syntax._
-
-case class BlogPost(id: Long, title: String, body: String)
-
-case class BlogPostWithoutId(title: String, body: String) {
-  def toBlogPost(id: Long): BlogPost = {
-    BlogPost(id, title, body)
-  }
-}
 
 object BlogController extends Controller {
 

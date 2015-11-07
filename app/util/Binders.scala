@@ -1,6 +1,6 @@
 package util
 
-import controllers.BlogPost
+import blog.BlogPost
 import play.api.mvc.QueryStringBindable
 
 object Binders {

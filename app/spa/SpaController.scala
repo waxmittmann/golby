@@ -1,9 +1,8 @@
-package controllers
+package spa
 
 import play.api.mvc.{Action, Controller}
-import play.api.http.MimeTypes
 
-object Application extends Controller {
+object SpaController extends Controller {
 
   def index = Action {
     Ok(views.html.Index())

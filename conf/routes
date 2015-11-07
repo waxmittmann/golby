@@ -2,21 +2,20 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-
-# Home page
-GET         /                 controllers.Application.index()
-
-# Test controller
-GET         /test             controllers.TestController.list
-POST        /test             controllers.TestController.add(cheese: String)
-POST        /goo              controllers.TestController.goo()
+# Get the SPA
+GET         /                 spa.SpaController.index()
 
 # Blog post controller
-GET         /posts            controllers.BlogController.list
-POST        /posts            controllers.BlogController.add
-GET         /posts/:id        controllers.BlogController.get(id: Long)
-PUT         /posts/:id        controllers.BlogController.edit(id: Long)
-DELETE      /posts/:id        controllers.BlogController.delete(id: Long)
+GET           /posts                 blog.BlogController.list
+POST          /posts                 blog.BlogController.add
+GET           /posts/:id             blog.BlogController.get(id: Long)
+PUT           /posts/:id             blog.BlogController.edit(id: Long)
+DELETE        /posts/:id             blog.BlogController.delete(id: Long)
+
+# Authentication controller
+POST          /authentication        authentication.AuthenticationController.login()
+DELETE        /authentication        authentication.AuthenticationController.logout()
+GET           /authentication        authentication.AuthenticationController.isAuthenticated()
 
 # Map the JS resource paths
-GET         /*file            controllers.Assets.versioned(path="/public", file: Asset)
+GET           /*file                 controllers.Assets.versioned(path="/public", file: Asset)

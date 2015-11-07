@@ -1,4 +1,4 @@
-import play.PlayImport.PlayKeys._
+//import play.PlayImport.PlayKeys._
 
 name := """angular-seed-play"""
 
@@ -13,7 +13,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 pipelineStages := Seq(rjs, digest, gzip)
 
-routesImport += "util.Binders._"
-routesImport += "controllers.BlogPost"
+//routesImport += "util.Binders._"
+//routesImport += "controllers.BlogPost"
 
 fork in run := true

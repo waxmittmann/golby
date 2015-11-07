@@ -456,22 +456,31 @@ var blogposts;
 (function (blogposts) {
     'use strict';
     var AlertsCtrl = (function () {
-        function AlertsCtrl($scope, alertsService) {
+        function AlertsCtrl($scope, $interval, alertsService) {
             this.$scope = $scope;
+            this.$interval = $interval;
             this.alertsService = alertsService;
             alertsService.register(this);
         }
         AlertsCtrl.prototype.receive = function (type, message) {
+            if (this.curInterval) {
+                this.$interval.cancel(this.curInterval);
+            }
             this.$scope.alert = {
                 'type': type,
                 'message': message
             };
+            var that = this;
+            this.curInterval = this.$interval(function () {
+                that.$scope.alert = {};
+            }, 1500);
             console.log("Received alert");
             //Todo: Have it clear after xxx ms
             //Potential Todo: Have a queue of messages, in case we have multiple
         };
         AlertsCtrl.$inject = [
             '$scope',
+            '$interval',
             'alertsService'
         ];
         return AlertsCtrl;
