@@ -10,27 +10,49 @@ module blogposts {
 			'$scope'
 		];
 
+    public username: String = "";
+    public password: String = "";
+
     constructor(
       private authenticationService,
       private $scope
     ) {
         $scope.vm = this;
-        $scope.loggedIn = this.authenticationService.isLoggedIn();
+        this.checkLoggedIn();
+    }
+
+    private checkLoggedIn() {
+      var that = this;
+
+      console.log(this.authenticationService.isLoggedIn());
+      this.authenticationService.isLoggedIn()
+        .then(
+          function(isLoggedIn) {
+            that.$scope.loggedIn = isLoggedIn;
+          }, function() {
+            throw "Something went wrong!";
+          });
     }
 
     logIn() {
-      this.authenticationService.login();
-      this.$scope.loggedIn = this.authenticationService.isLoggedIn();
+      var that = this;
+      
+      this.authenticationService.login(this.username, this.password).then(function() {
+        that.checkLoggedIn();
+      });
     }
 
     logOut() {
-      this.authenticationService.logout();
-      this.$scope.loggedIn = this.authenticationService.isLoggedIn();
+      var that = this;
+
+      this.authenticationService.logout().then(function() {
+        that.checkLoggedIn();
+      });
     }
 
     showAdminControls(): boolean {
-      console.log("is logged in? = " + this.authenticationService.isLoggedIn());
-      return this.authenticationService.isLoggedIn();
+      console.log("is logged in? = " + this.authenticationService.isProbablyLoggedIn());
+      return this.authenticationService.isProbablyLoggedIn();
     }
   }
 }

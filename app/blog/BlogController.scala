@@ -1,5 +1,6 @@
 package blog
 
+import authentication.AuthenticationService
 import play.api.libs.json.Json._
 import play.api.libs.json.{JsPath, Json, Reads, Writes}
 import play.api.mvc.{Action, AnyContent, Controller}
@@ -41,14 +42,8 @@ object BlogController extends Controller {
     (3l, BlogPost(3l, "Third Post", "... is the best"))
   )
 
-  def createBlogEntry(blogPostWithoutId: BlogPostWithoutId): BlogPost = {
-    val nextId = posts.keys.max + 1;
-    val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
-    blogPostWithId
-  }
-
   def add() = Action {
-    implicit request =>
+    AuthenticationService.doIfAuthenticated((request) => {
       request.body.asJson.flatMap(json => {
         blogPostWithoutIdReads.reads(json).asOpt.flatMap(blogPostWithoutId => {
           val blogPostWithId: BlogPost = createBlogEntry(blogPostWithoutId)
@@ -57,6 +52,13 @@ object BlogController extends Controller {
         }
         )
       }).getOrElse(BadRequest("Something went nasty"))
+    })
+  }
+
+  private def createBlogEntry(blogPostWithoutId: BlogPostWithoutId): BlogPost = {
+    val nextId = posts.keys.max + 1;
+    val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
+    blogPostWithId
   }
 
   def list = Action {
@@ -73,19 +75,22 @@ object BlogController extends Controller {
   }
 
   def delete(id: Long) = Action {
-    //Must be a 'scalarier' way of doing this
-    if (posts.contains(id)) {
-      Ok(toJson((posts -= id).values))
-    } else {
-      NotFound("No post with id " + id)
-    }
+    AuthenticationService.doIfAuthenticated((request) => {
+      //Must be a 'scalarier' way of doing this
+      if (posts.contains(id)) {
+        Ok(toJson((posts -= id).values))
+      } else {
+        NotFound("No post with id " + id)
+      }
 
-    Ok(Json.toJson(posts.values))
+      Ok(Json.toJson(posts.values))
+    })
   }
 
   def edit(id: Long): Action[AnyContent] = play.api.mvc.Action {
-    implicit request =>
-      val result = request.body.asJson.flatMap(json => {
+    //Todo: Figure out a nicer way of doing it (annotation mayhaps? interceptor?)
+    AuthenticationService.doIfAuthenticated((request) => {
+      request.body.asJson.flatMap(json => {
         blogPostReads.reads(json).asOpt.flatMap((blogPost: BlogPost) => {
           if (blogPost.id != id) {
             Some(BadRequest("id in path does not equal post id"))
@@ -95,8 +100,7 @@ object BlogController extends Controller {
           }
         })
       }).getOrElse(BadRequest("Something went nasty"))
-
-      result
+    })
   }
 
 }

@@ -11,7 +11,7 @@ module blogposts {
             .controller('alertsCtrl', AlertsCtrl)
 
             .service('blogPostStore', RemoteBlogPostStore)
-            .service('authenticationService', AuthenticationService)
+            .service('authenticationService', RemoteAuthenticationService)
             .service('alertsService', AlertsService)
             .service('promiseBuilder', PromiseBuilder)
 

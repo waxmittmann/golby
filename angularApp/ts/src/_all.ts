@@ -12,8 +12,10 @@
 /// <reference path='./blogpost/store/implementations/LocalStorageBlogPostStore.ts' />
 /// <reference path='./blogpost/store/implementations/RemoteBlogPostStore.ts' />
 
-/// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
+/// <reference path='./authentication/AuthenticationService.ts' />
+/// <reference path='./authentication/implementation/AlwaysAllowAuthenticationService.ts' />
+/// <reference path='./authentication/implementation/RemoteAuthenticationService.ts' />
 
 /// <reference path='./alerts/AlertsService.ts' />
 /// <reference path='./alerts/AlertsCtrl.ts' />

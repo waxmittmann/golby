@@ -67,7 +67,7 @@ module blogposts {
                     that.alertsService.error("Error retrieving posts");
                     console.log("Error retrieving posts");
                 }
-            )
+            );
         }
 
         deletePost(id:number) {

@@ -1,4 +1,4 @@
-/// <reference path='../../../_all.ts' />
+/// <reference path='../../_all.ts' />
 
 module blogposts {
     'use strict';
@@ -9,24 +9,19 @@ module blogposts {
 
     export class RemoteBlogPostStore implements BlogPostStore {
 
-        public static $inject = ['$q', '$http', 'authenticationService'];
+        public static $inject = ['$q', '$http'];
 
         constructor(
             private $q,
-            private $http: ng.IHttpService,
-            private authenticationService: AuthenticationService
+            private $http: ng.IHttpService
         ) { }
 
         add(newPost: BlogPostData): ng.IPromise<BlogPost> {
             var deferred = this.$q.defer();
-            var that = this;
 
             this.$http({
                 method: 'POST',
                 url: '/posts',
-                headers: {
-                    'token': that.authenticationService.getToken()
-                },
                 data: JSON.stringify({
                     'title': newPost.title,
                     'body': newPost.body
@@ -46,14 +41,10 @@ module blogposts {
 
         edit(editedPost: BlogPost): ng.IPromise<BlogPost> {
             var deferred = this.$q.defer();
-            var that = this;
 
             this.$http({
                 method: 'PUT',
                 url: '/posts/' + editedPost.id,
-                headers: {
-                    'token': that.authenticationService.getToken()
-                },
                 data: JSON.stringify(editedPost)
             }).then(
                 function(result: ServerResponse) {
@@ -89,14 +80,10 @@ module blogposts {
 
         remove(id: number): ng.IPromise<number> {
             var deferred = this.$q.defer();
-            var that = this;
 
             this.$http({
                 method: 'DELETE',
-                url: '/posts/' + id,
-                headers: {
-                    'token': that.authenticationService.getToken()
-                }
+                url: '/posts/' + id
             }).then(
                 function(result: string) {
                     deferred.resolve(Number(result));

@@ -23,12 +23,13 @@ object AuthenticationService {
     currentlyAuthenticated.fold(false)(correctToken => correctToken == token)
   }
 
-  def doIfAuthenticated(request: Request[AnyContent], func: (Request[AnyContent] => Result)) = {
-    request.headers.get("token").flatMap(token =>
-      if (AuthenticationService.isAuthorized(token))
-        Some(func(request))
-      else
-        Some(Unauthorized("Bad token"))
-    ).getOrElse(Unauthorized("No token"))
+  def doIfAuthenticated(func: (Request[AnyContent] => Result)) = {
+    implicit request: Request[AnyContent] =>
+      request.headers.get("token").flatMap(token =>
+        if (AuthenticationService.isAuthorized(token))
+          Some(func(request))
+        else
+          Some(Unauthorized("Bad token"))
+      ).getOrElse(Unauthorized("No token"))
   }
 }

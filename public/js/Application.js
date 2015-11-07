@@ -273,15 +273,20 @@ var blogposts;
         return ServerResponse;
     })();
     var RemoteBlogPostStore = (function () {
-        function RemoteBlogPostStore($q, $http) {
+        function RemoteBlogPostStore($q, $http, authenticationService) {
             this.$q = $q;
             this.$http = $http;
+            this.authenticationService = authenticationService;
         }
         RemoteBlogPostStore.prototype.add = function (newPost) {
             var deferred = this.$q.defer();
+            var that = this;
             this.$http({
                 method: 'POST',
                 url: '/posts',
+                headers: {
+                    'token': that.authenticationService.getToken()
+                },
                 data: JSON.stringify({
                     'title': newPost.title,
                     'body': newPost.body
@@ -296,9 +301,13 @@ var blogposts;
         };
         RemoteBlogPostStore.prototype.edit = function (editedPost) {
             var deferred = this.$q.defer();
+            var that = this;
             this.$http({
                 method: 'PUT',
                 url: '/posts/' + editedPost.id,
+                headers: {
+                    'token': that.authenticationService.getToken()
+                },
                 data: JSON.stringify(editedPost)
             }).then(function (result) {
                 deferred.resolve(result.data);
@@ -323,9 +332,13 @@ var blogposts;
         };
         RemoteBlogPostStore.prototype.remove = function (id) {
             var deferred = this.$q.defer();
+            var that = this;
             this.$http({
                 method: 'DELETE',
-                url: '/posts/' + id
+                url: '/posts/' + id,
+                headers: {
+                    'token': that.authenticationService.getToken()
+                }
             }).then(function (result) {
                 deferred.resolve(Number(result));
             }, function (error) {
@@ -347,33 +360,10 @@ var blogposts;
             });
             return deferred.promise;
         };
-        RemoteBlogPostStore.$inject = ['$q', '$http'];
+        RemoteBlogPostStore.$inject = ['$q', '$http', 'authenticationService'];
         return RemoteBlogPostStore;
     })();
     blogposts.RemoteBlogPostStore = RemoteBlogPostStore;
-})(blogposts || (blogposts = {}));
-/// <reference path='../_all.ts' />
-var blogposts;
-(function (blogposts) {
-    'use strict';
-    var AuthenticationService = (function () {
-        function AuthenticationService() {
-            this.loggedIn = false;
-        }
-        AuthenticationService.prototype.login = function (password) {
-            console.log("Logged in");
-            this.loggedIn = true;
-        };
-        AuthenticationService.prototype.logout = function () {
-            console.log("Logged out");
-            this.loggedIn = false;
-        };
-        AuthenticationService.prototype.isLoggedIn = function () {
-            return this.loggedIn;
-        };
-        return AuthenticationService;
-    })();
-    blogposts.AuthenticationService = AuthenticationService;
 })(blogposts || (blogposts = {}));
 /// <reference path='../_all.ts' />
 var blogposts;
@@ -383,20 +373,36 @@ var blogposts;
         function AuthenticationCtrl(authenticationService, $scope) {
             this.authenticationService = authenticationService;
             this.$scope = $scope;
+            this.username = "";
+            this.password = "";
             $scope.vm = this;
-            $scope.loggedIn = this.authenticationService.isLoggedIn();
+            this.checkLoggedIn();
         }
+        AuthenticationCtrl.prototype.checkLoggedIn = function () {
+            var that = this;
+            console.log(this.authenticationService.isLoggedIn());
+            this.authenticationService.isLoggedIn()
+                .then(function (isLoggedIn) {
+                that.$scope.loggedIn = isLoggedIn;
+            }, function () {
+                throw "Something went wrong!";
+            });
+        };
         AuthenticationCtrl.prototype.logIn = function () {
-            this.authenticationService.login();
-            this.$scope.loggedIn = this.authenticationService.isLoggedIn();
+            var that = this;
+            this.authenticationService.login(this.username, this.password).then(function () {
+                that.checkLoggedIn();
+            });
         };
         AuthenticationCtrl.prototype.logOut = function () {
-            this.authenticationService.logout();
-            this.$scope.loggedIn = this.authenticationService.isLoggedIn();
+            var that = this;
+            this.authenticationService.logout().then(function () {
+                that.checkLoggedIn();
+            });
         };
         AuthenticationCtrl.prototype.showAdminControls = function () {
-            console.log("is logged in? = " + this.authenticationService.isLoggedIn());
-            return this.authenticationService.isLoggedIn();
+            console.log("is logged in? = " + this.authenticationService.isProbablyLoggedIn());
+            return this.authenticationService.isProbablyLoggedIn();
         };
         AuthenticationCtrl.$inject = [
             'authenticationService',
@@ -405,6 +411,130 @@ var blogposts;
         return AuthenticationCtrl;
     })();
     blogposts.AuthenticationCtrl = AuthenticationCtrl;
+})(blogposts || (blogposts = {}));
+/// <reference path='../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+})(blogposts || (blogposts = {}));
+/// <reference path='../../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+    var AlwaysAllowAuthenticationService = (function () {
+        function AlwaysAllowAuthenticationService($q) {
+            this.$q = $q;
+            this.loggedIn = false;
+        }
+        AlwaysAllowAuthenticationService.prototype.login = function (username, password) {
+            console.log("Logged in");
+            this.loggedIn = true;
+            var future = this.$q.defer;
+            future.resolve("blah");
+            return future.promise;
+        };
+        AlwaysAllowAuthenticationService.prototype.logout = function () {
+            console.log("Logged out");
+            this.loggedIn = false;
+            var future = this.$q.defer;
+            future.resolve("blah");
+            return future.promise;
+        };
+        AlwaysAllowAuthenticationService.prototype.isLoggedIn = function () {
+            var future = this.$q.defer;
+            future.resolve(this.loggedIn);
+            return future.promise;
+        };
+        AlwaysAllowAuthenticationService.prototype.isProbablyLoggedIn = function () {
+            return this.loggedIn;
+        };
+        AlwaysAllowAuthenticationService.prototype.getToken = function () {
+            return "dummyToken";
+        };
+        AlwaysAllowAuthenticationService.$inject = ['$q'];
+        return AlwaysAllowAuthenticationService;
+    })();
+    blogposts.AlwaysAllowAuthenticationService = AlwaysAllowAuthenticationService;
+})(blogposts || (blogposts = {}));
+/// <reference path='../../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+    var RemoteAuthenticationService = (function () {
+        function RemoteAuthenticationService($q, $http) {
+            this.$q = $q;
+            this.$http = $http;
+            this.probablyLoggedIn = false;
+        }
+        RemoteAuthenticationService.prototype.login = function (username, password) {
+            var that = this;
+            var deferred = this.$q.defer();
+            this.$http({
+                method: 'POST',
+                url: '/authentication',
+                data: JSON.stringify({
+                    'username': username,
+                    'password': password
+                })
+            }).then(function (tokenResponse) {
+                that.probablyLoggedIn = true;
+                that.token = tokenResponse.data["token"];
+                deferred.resolve();
+            }, function (error) {
+                console.log("Had error " + error);
+                that.probablyLoggedIn = false;
+                deferred.reject("Had error " + error);
+            });
+            return deferred.promise;
+        };
+        RemoteAuthenticationService.prototype.logout = function () {
+            var deferred = this.$q.defer();
+            var that = this;
+            this.$http({
+                method: 'DELETE',
+                url: '/authentication',
+                headers: {
+                    token: that.token
+                }
+            }).then(function () {
+                that.probablyLoggedIn = false;
+                that.token = "";
+                deferred.resolve();
+            }, function (error) {
+                console.log("Had error " + error);
+                deferred.reject("Had error " + error);
+            });
+            return deferred.promise;
+        };
+        RemoteAuthenticationService.prototype.isLoggedIn = function () {
+            var deferred = this.$q.defer();
+            var that = this;
+            this.$http({
+                method: 'GET',
+                url: '/authentication',
+                headers: {
+                    token: that.token
+                }
+            }).then(function () {
+                that.probablyLoggedIn = true;
+                deferred.resolve(true);
+            }, function (error) {
+                console.log("Had error " + error);
+                that.probablyLoggedIn = false;
+                deferred.resolve(false);
+            });
+            return deferred.promise;
+        };
+        RemoteAuthenticationService.prototype.isProbablyLoggedIn = function () {
+            return this.probablyLoggedIn;
+        };
+        RemoteAuthenticationService.prototype.getToken = function () {
+            return this.token;
+        };
+        RemoteAuthenticationService.$inject = ['$q', '$http'];
+        return RemoteAuthenticationService;
+    })();
+    blogposts.RemoteAuthenticationService = RemoteAuthenticationService;
 })(blogposts || (blogposts = {}));
 /// <reference path='../_all.ts' />
 var blogposts;
@@ -520,8 +650,10 @@ var blogposts;
 /// <reference path='./blogpost/store/BlogPostStore.ts' />
 /// <reference path='./blogpost/store/implementations/LocalStorageBlogPostStore.ts' />
 /// <reference path='./blogpost/store/implementations/RemoteBlogPostStore.ts' />
-/// <reference path='./authentication/AuthenticationService.ts' />
 /// <reference path='./authentication/AuthenticationCtrl.ts' />
+/// <reference path='./authentication/AuthenticationService.ts' />
+/// <reference path='./authentication/implementation/AlwaysAllowAuthenticationService.ts' />
+/// <reference path='./authentication/implementation/RemoteAuthenticationService.ts' />
 /// <reference path='./alerts/AlertsService.ts' />
 /// <reference path='./alerts/AlertsCtrl.ts' />
 /// <reference path='./common/PromiseBuilder.ts' />
@@ -536,7 +668,7 @@ var blogposts;
         .controller('authenticationCtrl', blogposts.AuthenticationCtrl)
         .controller('alertsCtrl', blogposts.AlertsCtrl)
         .service('blogPostStore', blogposts.RemoteBlogPostStore)
-        .service('authenticationService', blogposts.AuthenticationService)
+        .service('authenticationService', blogposts.RemoteAuthenticationService)
         .service('alertsService', blogposts.AlertsService)
         .service('promiseBuilder', blogposts.PromiseBuilder)
         .config(['$routeProvider',

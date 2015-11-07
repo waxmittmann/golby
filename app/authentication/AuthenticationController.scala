@@ -41,14 +41,14 @@ object AuthenticationController extends Controller {
     result
   }
 
-  def logout() = Action { request =>
-    AuthenticationService.doIfAuthenticated(request, (_) => {
+  def logout() = Action {
+    AuthenticationService.doIfAuthenticated((_) => {
       AuthenticationService.unauthenticate()
       Ok("All good!")
     })
   }
 
-  def isAuthenticated() = Action { request =>
-    AuthenticationService.doIfAuthenticated(request, (_) => Ok("All good!"))
+  def isAuthenticated() = Action {
+    AuthenticationService.doIfAuthenticated((_) => Ok("All good!"))
   }
 }

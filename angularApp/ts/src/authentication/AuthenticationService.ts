@@ -3,22 +3,15 @@
 module blogposts {
     'use strict';
 
-    export class AuthenticationService {
+    export interface AuthenticationService {
+        login(username: String, password: String): ng.IPromise<String>;
 
-        private loggedIn:boolean = false;
+        logout(): ng.IPromise<String>;
 
-        login(password:string) {
-            console.log("Logged in");
-            this.loggedIn = true;
-        }
+        isLoggedIn(): ng.IPromise<Boolean>;
 
-        logout() {
-            console.log("Logged out");
-            this.loggedIn = false;
-        }
+        isProbablyLoggedIn(): Boolean;
 
-        isLoggedIn() {
-            return this.loggedIn;
-        }
+        getToken(): string;
     }
 }
