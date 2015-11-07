@@ -62,28 +62,20 @@ object BlogController extends Controller {
   }
 
   def list = Action {
-    Ok(Json.toJson(posts.values))
+    Ok(Json.toJson(posts.values.toList.sortWith((postA: BlogPost, postB: BlogPost) => postA.id.compareTo(postB.id) > 0)))
   }
 
   def get(id: Long) = Action {
-    //Must be a 'scalarier' way of doing this
-    if (posts.contains(id)) {
-      Ok(toJson(posts.get(id)))
-    } else {
-      NotFound("No post with id " + id)
-    }
+    posts.get(id)
+      .flatMap((blogPost) => Some(Ok(toJson(blogPost))))
+      .getOrElse(NotFound("No post with id " + id))
   }
 
   def delete(id: Long) = Action {
     AuthenticationService.doIfAuthenticated((request) => {
-      //Must be a 'scalarier' way of doing this
-      if (posts.contains(id)) {
-        Ok(toJson((posts -= id).values))
-      } else {
-        NotFound("No post with id " + id)
-      }
-
-      Ok(Json.toJson(posts.values))
+      posts.get(id)
+        .flatMap((blogPost) => Some(Ok(toJson((posts -= id).values))))
+        .getOrElse(NotFound("No post with id " + id))
     })
   }
 

@@ -50,7 +50,7 @@ module blogposts {
         }
 
         list():BlogPost[] {
-            return this.blogPosts;
+            return Array.reverse(this.blogPosts);
         }
 
         loadSelectedPost(): void {
