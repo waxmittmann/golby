@@ -4,10 +4,12 @@ module blogposts {
     'use strict';
 
     export class RemoteAuthenticationService implements AuthenticationService {
-        private token: string;
+        // private token: string;
         private probablyLoggedIn: Boolean = false;
 
         public static $inject = ['$q', '$http'];
+
+        private static STORAGE_ID = "token-store";
 
         constructor(
             private $q,
@@ -28,7 +30,7 @@ module blogposts {
           }).then(
               function(tokenResponse) {
                   that.probablyLoggedIn = true;
-                  that.token = tokenResponse.data["token"];
+                  that.setToken(tokenResponse.data["token"]);
                   deferred.resolve();
               },
               function(error) {
@@ -47,12 +49,12 @@ module blogposts {
               method: 'DELETE',
               url: '/authentication',
               headers: {
-                token: that.token
+                token: that.getToken()
               }
           }).then(
               function() {
                   that.probablyLoggedIn = false;
-                  that.token = "";
+                  that.setToken("");
                   deferred.resolve();
               },
               function(error) {
@@ -72,7 +74,7 @@ module blogposts {
               method: 'GET',
               url: '/authentication',
               headers: {
-                token: that.token
+                token: that.getToken()
               }
           }).then(
               function() {
@@ -93,8 +95,13 @@ module blogposts {
           return this.probablyLoggedIn;
         }
 
+        private setToken(token: string) {
+          localStorage.setItem(RemoteAuthenticationService.STORAGE_ID, token);
+        }
+
         getToken() {
-            return this.token;
+          // return this.token;
+          return localStorage.getItem(RemoteAuthenticationService.STORAGE_ID);
         }
     }
 }

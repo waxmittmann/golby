@@ -464,6 +464,7 @@ var blogposts;
         function RemoteAuthenticationService($q, $http) {
             this.$q = $q;
             this.$http = $http;
+            // private token: string;
             this.probablyLoggedIn = false;
         }
         RemoteAuthenticationService.prototype.login = function (username, password) {
@@ -478,7 +479,7 @@ var blogposts;
                 })
             }).then(function (tokenResponse) {
                 that.probablyLoggedIn = true;
-                that.token = tokenResponse.data["token"];
+                that.setToken(tokenResponse.data["token"]);
                 deferred.resolve();
             }, function (error) {
                 console.log("Had error " + error);
@@ -494,11 +495,11 @@ var blogposts;
                 method: 'DELETE',
                 url: '/authentication',
                 headers: {
-                    token: that.token
+                    token: that.getToken()
                 }
             }).then(function () {
                 that.probablyLoggedIn = false;
-                that.token = "";
+                that.setToken("");
                 deferred.resolve();
             }, function (error) {
                 console.log("Had error " + error);
@@ -513,7 +514,7 @@ var blogposts;
                 method: 'GET',
                 url: '/authentication',
                 headers: {
-                    token: that.token
+                    token: that.getToken()
                 }
             }).then(function () {
                 that.probablyLoggedIn = true;
@@ -528,10 +529,15 @@ var blogposts;
         RemoteAuthenticationService.prototype.isProbablyLoggedIn = function () {
             return this.probablyLoggedIn;
         };
+        RemoteAuthenticationService.prototype.setToken = function (token) {
+            localStorage.setItem(RemoteAuthenticationService.STORAGE_ID, token);
+        };
         RemoteAuthenticationService.prototype.getToken = function () {
-            return this.token;
+            // return this.token;
+            return localStorage.getItem(RemoteAuthenticationService.STORAGE_ID);
         };
         RemoteAuthenticationService.$inject = ['$q', '$http'];
+        RemoteAuthenticationService.STORAGE_ID = "token-store";
         return RemoteAuthenticationService;
     })();
     blogposts.RemoteAuthenticationService = RemoteAuthenticationService;
