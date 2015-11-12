@@ -95,37 +95,44 @@ var blogposts;
                 this.$location.path("/login");
             }
             if ($routeParams.postId) {
-                $scope.newPostId = $routeParams.postId;
-                blogPostStore.get($scope.newPostId).then(function (blogPost) {
+                this.postEditingId = $routeParams.postId;
+                //$scope.newPostId = $routeParams.postId;
+                blogPostStore.get(this.postEditingId).then(
+                //blogPostStore.get($scope.newPostId).then(
+                function (blogPost) {
                     var postToEdit = blogposts.BlogPostData.fromBlogPost(blogPost);
                     if (!postToEdit) {
                         throw "Post with id " + that.$scope.newPostId + " not found";
                     }
-                    that.$scope.postEditing = postToEdit;
-                    console.log("Now editing ");
-                    console.log(that.$scope.postEditing);
+                    //that.$scope.postEditing = postToEdit;
+                    that.postEditingData = postToEdit;
+                    //console.log("Now editing ");
+                    //console.log(that.$scope.postEditing);
                 }, function (error) {
                     console.log("Failed to load post");
                 });
             }
             else {
-                $scope.postEditing = new blogposts.BlogPostData("", "");
+                $scope.postEditingData = new blogposts.BlogPostData("", "");
             }
         }
         CreateBlogPostCtrl.prototype.addOrEditPost = function () {
-            if (this.$scope.newPostId) {
+            //if (this.$scope.newPostId) {
+            if (this.postEditingId) {
                 console.log("Editing, id present");
-                return this.blogPostStore.edit(this.$scope.postEditing.toBlogPost(this.$scope.newPostId));
+                return this.blogPostStore.edit(
+                //this.$scope.postEditing.toBlogPost(this.$scope.newPostId));
+                this.postEditingData.toBlogPost(this.postEditingId));
             }
             else {
                 console.log("Adding, no id");
-                return this.blogPostStore.add(this.$scope.postEditing);
+                return this.blogPostStore.add(this.postEditingData);
             }
         };
         CreateBlogPostCtrl.prototype.save = function () {
             var that = this;
             this.addOrEditPost().then(function (post) {
-                that.$scope.postEditing = post;
+                that.postEditingData = blogposts.BlogPostData.fromBlogPost(post);
                 console.log("Saved successfully");
             }, function () {
                 console.log("Failed to save");
@@ -322,49 +329,11 @@ var blogposts;
             });
             return deferred.promise;
         };
-        /*
-        What the fuck
-        edit(editedPost: BlogPost): ng.IPromise<BlogPost> {
-            var deferred = this.$q.defer();
-            var that = this;
-
-            var data = JSON.stringify(editedPost);
-            console.log("Edited post:");
-            console.log(editedPost);
-            console.log("Id type:");
-            console.log(typeof editedPost.id)
-            editedPost.id = Number.parseInt(editedPost.id);
-            console.log(typeof editedPost.id)
-
-            this.$http({
-                method: 'PUT',
-                url: '/posts/' + editedPost.id,
-                headers: {
-                    'token': that.authenticationService.getToken()
-                },
-                data: data
-            }).then(
-                function(result: ServerResponse) {
-                    deferred.resolve(result.data);
-                },
-                function(error) {
-                    console.log("Had error " + error);
-                    deferred.reject("Had error " + error);
-                }
-            );
-
-            return deferred.promise;
-        }
-         */
         RemoteBlogPostStore.prototype.edit = function (editedPost) {
             var deferred = this.$q.defer();
             var that = this;
-            console.log("Edited post:");
-            console.log(editedPost);
-            console.log("Id type:");
-            console.log(typeof editedPost.id);
-            //editedPost.id = Number.parseInt(editedPost.id);
-            //console.log(typeof editedPost.id)
+            //So typescript doesn't seem to enforce the number actually being a number... or maybe it's
+            //because of interface coercion? Check and raise bug if appropriate.
             editedPost = new blogposts.BlogPost(parseInt("" + editedPost.id), editedPost.title, editedPost.body);
             console.log(typeof editedPost.id);
             var data = JSON.stringify(editedPost);
@@ -436,25 +405,29 @@ var blogposts;
 (function (blogposts) {
     'use strict';
     var AuthenticationCtrl = (function () {
-        function AuthenticationCtrl(authenticationService, pageService, $scope) {
+        function AuthenticationCtrl(authenticationService, pageService, $scope, $location) {
             this.authenticationService = authenticationService;
             this.pageService = pageService;
             this.$scope = $scope;
+            this.$location = $location;
             this.username = "";
             this.password = "";
             $scope.vm = this;
-            this.checkLoggedIn();
+            this.checkLoggedIn(function () {
+            });
         }
         //This is so dodgy =p
         AuthenticationCtrl.prototype.pageHit = function () {
             this.pageService.pageChanged(AuthenticationCtrl.PAGE_NAME);
         };
-        AuthenticationCtrl.prototype.checkLoggedIn = function () {
+        //Fix: Check what null is and return
+        AuthenticationCtrl.prototype.checkLoggedIn = function (doAfterLogin) {
             var that = this;
             console.log(this.authenticationService.isLoggedIn());
             this.authenticationService.isLoggedIn()
                 .then(function (isLoggedIn) {
                 that.$scope.loggedIn = isLoggedIn;
+                doAfterLogin();
             }, function () {
                 throw "Something went wrong!";
             });
@@ -462,13 +435,15 @@ var blogposts;
         AuthenticationCtrl.prototype.logIn = function () {
             var that = this;
             this.authenticationService.login(this.username, this.password).then(function () {
-                that.checkLoggedIn();
+                that.checkLoggedIn(function () {
+                    that.$location.path("/");
+                });
             });
         };
         AuthenticationCtrl.prototype.logOut = function () {
             var that = this;
             this.authenticationService.logout().then(function () {
-                that.checkLoggedIn();
+                that.checkLoggedIn(function () { });
             });
         };
         AuthenticationCtrl.prototype.showAdminControls = function () {
@@ -478,7 +453,8 @@ var blogposts;
         AuthenticationCtrl.$inject = [
             'authenticationService',
             'pageService',
-            '$scope'
+            '$scope',
+            '$location'
         ];
         AuthenticationCtrl.PAGE_NAME = "Authentication";
         return AuthenticationCtrl;
@@ -849,8 +825,7 @@ var blogposts;
                 controller: 'createBlogPostCtrl'
             })
                 .when('/admin/posts/', {
-                templateUrl: 'views/newPost.html',
-                controller: 'createBlogPostCtrl'
+                templateUrl: 'views/newPost.html'
             })
                 .when('/login/', {
                 templateUrl: 'views/login.html'

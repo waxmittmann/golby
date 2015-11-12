@@ -1,20 +1,21 @@
-<div>
+<div ng-controller="createBlogPostCtrl as create">
     <form onSubmit="">
         <div class="form-group">
             <label>Title:</label>
-            <input class="form-control" ng-model="postEditing.title" id="new-post-title" type="text"/></input>
+            <!--<input class="form-control" ng-model="postEditing.title" id="new-post-title" type="text"/></input>-->
+            <input class="form-control" ng-model="create.postEditingData.title" id="new-post-title" type="text"/></input>
         </div>
 
         <div class="form-group">
             <label>Body:</label>
-            <textarea class="form-control" ng-model="postEditing.body" id="new-post-body"></textarea>
+            <textarea class="form-control" ng-model="create.postEditingData.body" id="new-post-body"></textarea>
         </div>
 
         <div class="form-group">
             <div>
-                <button class="btn btn-default" ng-click="vm.save()" type="submit">Save</button>
-                <button class="btn btn-default" ng-click="vm.done()" type="submit">Done</button>
-                <button class="btn btn-default" ng-click="vm.cancel()" type="submit">Cancel</button>
+                <button class="btn btn-default" ng-click="create.save()" type="submit">Save</button>
+                <button class="btn btn-default" ng-click="create.done()" type="submit">Done</button>
+                <button class="btn btn-default" ng-click="create.cancel()" type="submit">Cancel</button>
             </div>
         </div>
     </form>

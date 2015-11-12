@@ -17,6 +17,9 @@ module blogposts {
             '$routeParams'
         ];
 
+        public postEditingId: Number;
+        public postEditingData: BlogPostData;
+
         constructor(private blogPostStore:BlogPostStore,
                     private authenticationService,
                     private pageService,
@@ -32,34 +35,41 @@ module blogposts {
             }
 
             if ($routeParams.postId) {
-                $scope.newPostId = $routeParams.postId;
-                blogPostStore.get($scope.newPostId).then(
+
+                this.postEditingId = $routeParams.postId;
+                //$scope.newPostId = $routeParams.postId;
+                blogPostStore.get(this.postEditingId).then(
+                //blogPostStore.get($scope.newPostId).then(
                     function(blogPost) {
                         var postToEdit : BlogPostData = BlogPostData.fromBlogPost(blogPost);
                         if (!postToEdit) {
                             throw "Post with id " + that.$scope.newPostId + " not found";
                         }
-                        that.$scope.postEditing = postToEdit;
-                        console.log("Now editing ");
-                        console.log(that.$scope.postEditing);
+                        //that.$scope.postEditing = postToEdit;
+                        that.postEditingData = postToEdit;
+                        //console.log("Now editing ");
+                        //console.log(that.$scope.postEditing);
                     },
                     function(error) {
                         console.log("Failed to load post");
                     }
                 );
             } else {
-                $scope.postEditing = new BlogPostData("", "");
+
+                $scope.postEditingData = new BlogPostData("", "");
             }
         }
 
         addOrEditPost(): ng.IPromise<BlogPost> {
-            if (this.$scope.newPostId) {
+            //if (this.$scope.newPostId) {
+            if (this.postEditingId) {
                 console.log("Editing, id present");
                 return this.blogPostStore.edit(
-                    this.$scope.postEditing.toBlogPost(this.$scope.newPostId));
+                    //this.$scope.postEditing.toBlogPost(this.$scope.newPostId));
+                    this.postEditingData.toBlogPost(this.postEditingId));
             } else {
                 console.log("Adding, no id");
-                return this.blogPostStore.add(this.$scope.postEditing);
+                return this.blogPostStore.add(this.postEditingData);
             }
         }
 
@@ -67,7 +77,7 @@ module blogposts {
             var that = this;
             this.addOrEditPost().then(
                 function(post) {
-                    that.$scope.postEditing = post;
+                    that.postEditingData = BlogPostData.fromBlogPost(post);
                     console.log("Saved successfully");
                 },
                 function() {

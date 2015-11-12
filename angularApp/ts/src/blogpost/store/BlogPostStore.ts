@@ -6,7 +6,7 @@ module blogposts {
     export class BlogPostData {
         constructor(public title: String, public body: String) { }
 
-        toBlogPost(id: number) {
+        toBlogPost(id: Number) {
             return new BlogPost(id, this.title, this.body)
         }
 

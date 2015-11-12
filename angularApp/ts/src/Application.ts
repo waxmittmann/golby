@@ -36,8 +36,8 @@ module blogposts {
                             controller: 'createBlogPostCtrl'
                         })
                         .when('/admin/posts/', {
-                            templateUrl: 'views/newPost.html',
-                            controller: 'createBlogPostCtrl'
+                            templateUrl: 'views/newPost.html'
+                            //controller: 'createBlogPostCtrl'
                         })
                         .when('/login/', {
                             templateUrl: 'views/login.html'
