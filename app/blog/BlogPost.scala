@@ -97,22 +97,12 @@ object BlogPostsRepository {
   }
 
   def edit(blogPost: BlogPost): Future[BlogPost] = {
-//    val action: Query[(Rep[Long], ConstColumn[String], ConstColumn[String]), (Long, String, String), Seq] = blogPosts.map(toEdit => (toEdit.id , blogPost.title, blogPost.body))
-    //    val action = blogPosts.findBy(_.id == blogPost.id).
-
-    //Better way?
-//    val filter: Query[BlogPosts, (Long, String, String), Seq] = blogPosts
-//      .filter((bp: BlogPosts) => bp.id == blogPost.id)
-
-//    val action: Query[(Rep[Long], ConstColumn[String], ConstColumn[String]), (Long, String, String), Seq] = filter.map(p => (p.id, blogPost.title, blogPost.body))
     doWithDb(db => {
       db.run(blogPosts
         .filter(_.id === blogPost.id)
-//        .update((blogPost.id, blogPost.title, blogPost.body))
         .map(i => (i.title, i.body))
         .update((blogPost.title, blogPost.body))
         .map(_ => blogPost))
-//      db.run(action.update((1, "", ""))).map(_ => Unit)
     })
   }
 

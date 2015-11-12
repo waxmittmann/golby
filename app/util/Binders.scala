@@ -9,8 +9,6 @@ object Binders {
   implicit val blogPostQSB = new QueryStringBindable[BlogPost] {
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, BlogPost]] = {
       println(key + ", " + params)
-//      println(params("title"))
-//      println(params("body"))
       println(params.keys)
       return None;
     }

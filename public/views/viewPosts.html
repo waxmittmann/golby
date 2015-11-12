@@ -1,12 +1,11 @@
 <div class="blog-posts" ng-cloak>
-  <div ng-show="loggedIn" style='margin-bottom: 20px;'>Posts are: {{ vm.list() }}</div>
-
+  <!--<div ng-show="loggedIn" style='margin-bottom: 20px;'>Posts are: {{ vm.list() }}</div>-->
 
   <div class="panel panel-default" ng-repeat="post in vm.list()">
-    <div class="panel-heading"> <!-- blog-post-body -->
+    <div class="panel-heading">
       <h3 class="panel-title">{{ post.title }}</h3>
     </div>
-    <div class="panel-body"> <!-- blog-post-body -->
+    <div class="panel-body">
       {{ post.body }}
     </div>
     <div class="panel-body">
