@@ -11,9 +11,9 @@ case class LoginDetails(username: String, password: String) {
 }
 case class TokenResponse(token: String)
 
-object AuthenticationController extends Controller {
+class AuthenticationController extends Controller {
 
-  val correctLoginDetails = LoginDetails("damxam@gmail.com", "password1")
+  val correctLoginDetails = LoginDetails("", "")
 
   implicit val loginDetailsParser: Reads[LoginDetails] = (
         (JsPath \ "username").read[String] and

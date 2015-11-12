@@ -1,5 +1,26 @@
+@import '../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap-sprockets.scss';
+@import '../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap-compass.scss';
+@import '../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap.scss';
+
 [ng\:cloak], [ng-cloak], .ng-cloak {
   display: none !important;
+}
+
+.main-body {
+  max-width: 800px;
+  margin: auto;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+.login-form {
+  .text-center {
+    max-width: 400px;
+  }
+
+  .input-group {
+    margin-bottom: 15px;
+  }
 }
 
 .blog-menu {

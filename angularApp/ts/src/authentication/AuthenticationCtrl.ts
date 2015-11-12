@@ -7,18 +7,27 @@ module blogposts {
 
     public static $inject = [
       'authenticationService',
+      'pageService',
 			'$scope'
 		];
 
     public username: String = "";
     public password: String = "";
 
+    public static PAGE_NAME = "Authentication";
+
     constructor(
       private authenticationService,
+      private pageService,
       private $scope
     ) {
         $scope.vm = this;
         this.checkLoggedIn();
+    }
+
+    //This is so dodgy =p
+    pageHit() {
+      this.pageService.pageChanged(AuthenticationCtrl.PAGE_NAME);
     }
 
     private checkLoggedIn() {
@@ -36,7 +45,7 @@ module blogposts {
 
     logIn() {
       var that = this;
-      
+
       this.authenticationService.login(this.username, this.password).then(function() {
         that.checkLoggedIn();
       });

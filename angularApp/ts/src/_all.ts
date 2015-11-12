@@ -21,3 +21,5 @@
 /// <reference path='./alerts/AlertsCtrl.ts' />
 
 /// <reference path='./common/PromiseBuilder.ts' />
+/// <reference path='./common/PageService.ts' />
+/// <reference path='./common/PageCtrl.ts' />

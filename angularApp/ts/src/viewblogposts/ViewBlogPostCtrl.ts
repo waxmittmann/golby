@@ -4,10 +4,14 @@ module blogposts {
     'use strict';
 
     export class ViewBlogPostCtrl {
+      public static PAGE_NAME_SINGLE_VIEW: String = "ViewSinglePost";
+      public static PAGE_NAME_LIST_VIEW: String = "ViewList";
+
         public static $inject = [
             'blogPostStore',
             'authenticationService',
             'alertsService',
+            'pageService',
             '$scope',
             '$location',
             '$routeParams'
@@ -23,12 +27,18 @@ module blogposts {
         constructor(private blogPostStore : BlogPostStore,
                     private authenticationService : AuthenticationService,
                     private alertsService: AlertsService,
+                    private pageService: PageService,
                     private $scope,
                     private $location : ng.ILocationService,
                     private $routeParams) {
             $scope.vm = this;
             this.loadPosts();
             this.selectedPostId = $routeParams.postId;
+            if (this.selectedPostId) {
+              this.pageService.pageChanged(ViewBlogPostCtrl.PAGE_NAME_SINGLE_VIEW);
+            } else {
+              this.pageService.pageChanged(ViewBlogPostCtrl.PAGE_NAME_LIST_VIEW);
+            }
             console.log("Called constructor! " + $routeParams.postId);
         }
 
@@ -50,7 +60,8 @@ module blogposts {
         }
 
         list():BlogPost[] {
-            return Array.reverse(this.blogPosts);
+            return this.blogPosts;
+            // return Array.reverse(this.blogPosts);
         }
 
         loadSelectedPost(): void {

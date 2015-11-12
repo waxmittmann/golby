@@ -6,9 +6,12 @@ module blogposts {
 
     export class CreateBlogPostCtrl {
 
+      public static PAGE_NAME: String = "CreateBlogPost";
+
         public static $inject = [
             'blogPostStore',
             'authenticationService',
+            'pageService',
             '$scope',
             '$location',
             '$routeParams'
@@ -16,9 +19,11 @@ module blogposts {
 
         constructor(private blogPostStore:BlogPostStore,
                     private authenticationService,
+                    private pageService,
                     private $scope,
                     private $location:ng.ILocationService,
                     private $routeParams) {
+            pageService.pageChanged(CreateBlogPostCtrl.PAGE_NAME);
             $scope.vm = this;
             var that = this;
 
@@ -30,7 +35,7 @@ module blogposts {
                 $scope.newPostId = $routeParams.postId;
                 blogPostStore.get($scope.newPostId).then(
                     function(blogPost) {
-                        var postToEdit : BlogPostData = blogPost;
+                        var postToEdit : BlogPostData = BlogPostData.fromBlogPost(blogPost);
                         if (!postToEdit) {
                             throw "Post with id " + that.$scope.newPostId + " not found";
                         }
@@ -48,9 +53,12 @@ module blogposts {
         }
 
         addOrEditPost(): ng.IPromise<BlogPost> {
-            if (this.$scope.postEditing.id) {
-                return this.blogPostStore.edit(this.$scope.postEditing);
+            if (this.$scope.newPostId) {
+                console.log("Editing, id present");
+                return this.blogPostStore.edit(
+                    this.$scope.postEditing.toBlogPost(this.$scope.newPostId));
             } else {
+                console.log("Adding, no id");
                 return this.blogPostStore.add(this.$scope.postEditing);
             }
         }

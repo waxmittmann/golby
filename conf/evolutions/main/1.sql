@@ -1,0 +1,8 @@
+# --- !Ups
+
+create table "BLOGPOSTS" ("ID" INTEGER NOT NULL PRIMARY KEY,"TITLE" VARCHAR NOT NULL, "BODY" VARCHAR NOT NULL);
+
+# --- !Downs
+
+drop table "BLOGPOSTS";
+

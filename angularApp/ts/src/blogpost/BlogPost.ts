@@ -5,9 +5,9 @@ module blogposts {
 
   export class BlogPost {
     constructor(
-      public id: number,
-      public title: string,
-      public body: string
+      public id: Number,
+      public title: String,
+      public body: String
     ) { }
   }
 

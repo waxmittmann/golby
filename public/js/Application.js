@@ -3,16 +3,23 @@ var blogposts;
 (function (blogposts) {
     'use strict';
     var ViewBlogPostCtrl = (function () {
-        function ViewBlogPostCtrl(blogPostStore, authenticationService, alertsService, $scope, $location, $routeParams) {
+        function ViewBlogPostCtrl(blogPostStore, authenticationService, alertsService, pageService, $scope, $location, $routeParams) {
             this.blogPostStore = blogPostStore;
             this.authenticationService = authenticationService;
             this.alertsService = alertsService;
+            this.pageService = pageService;
             this.$scope = $scope;
             this.$location = $location;
             this.$routeParams = $routeParams;
             $scope.vm = this;
             this.loadPosts();
             this.selectedPostId = $routeParams.postId;
+            if (this.selectedPostId) {
+                this.pageService.pageChanged(ViewBlogPostCtrl.PAGE_NAME_SINGLE_VIEW);
+            }
+            else {
+                this.pageService.pageChanged(ViewBlogPostCtrl.PAGE_NAME_LIST_VIEW);
+            }
             console.log("Called constructor! " + $routeParams.postId);
         }
         ViewBlogPostCtrl.prototype.loadPosts = function () {
@@ -30,6 +37,7 @@ var blogposts;
         };
         ViewBlogPostCtrl.prototype.list = function () {
             return this.blogPosts;
+            // return Array.reverse(this.blogPosts);
         };
         ViewBlogPostCtrl.prototype.loadSelectedPost = function () {
             console.log("Called loadSelectedPost");
@@ -53,10 +61,13 @@ var blogposts;
                 console.log("Error deleting post");
             });
         };
+        ViewBlogPostCtrl.PAGE_NAME_SINGLE_VIEW = "ViewSinglePost";
+        ViewBlogPostCtrl.PAGE_NAME_LIST_VIEW = "ViewList";
         ViewBlogPostCtrl.$inject = [
             'blogPostStore',
             'authenticationService',
             'alertsService',
+            'pageService',
             '$scope',
             '$location',
             '$routeParams'
@@ -70,12 +81,14 @@ var blogposts;
 (function (blogposts) {
     'use strict';
     var CreateBlogPostCtrl = (function () {
-        function CreateBlogPostCtrl(blogPostStore, authenticationService, $scope, $location, $routeParams) {
+        function CreateBlogPostCtrl(blogPostStore, authenticationService, pageService, $scope, $location, $routeParams) {
             this.blogPostStore = blogPostStore;
             this.authenticationService = authenticationService;
+            this.pageService = pageService;
             this.$scope = $scope;
             this.$location = $location;
             this.$routeParams = $routeParams;
+            pageService.pageChanged(CreateBlogPostCtrl.PAGE_NAME);
             $scope.vm = this;
             var that = this;
             if (!authenticationService.isLoggedIn()) {
@@ -84,7 +97,7 @@ var blogposts;
             if ($routeParams.postId) {
                 $scope.newPostId = $routeParams.postId;
                 blogPostStore.get($scope.newPostId).then(function (blogPost) {
-                    var postToEdit = blogPost;
+                    var postToEdit = blogposts.BlogPostData.fromBlogPost(blogPost);
                     if (!postToEdit) {
                         throw "Post with id " + that.$scope.newPostId + " not found";
                     }
@@ -100,10 +113,12 @@ var blogposts;
             }
         }
         CreateBlogPostCtrl.prototype.addOrEditPost = function () {
-            if (this.$scope.postEditing.id) {
-                return this.blogPostStore.edit(this.$scope.postEditing);
+            if (this.$scope.newPostId) {
+                console.log("Editing, id present");
+                return this.blogPostStore.edit(this.$scope.postEditing.toBlogPost(this.$scope.newPostId));
             }
             else {
+                console.log("Adding, no id");
                 return this.blogPostStore.add(this.$scope.postEditing);
             }
         };
@@ -128,9 +143,11 @@ var blogposts;
                 console.log("Failed to save");
             });
         };
+        CreateBlogPostCtrl.PAGE_NAME = "CreateBlogPost";
         CreateBlogPostCtrl.$inject = [
             'blogPostStore',
             'authenticationService',
+            'pageService',
             '$scope',
             '$location',
             '$routeParams'
@@ -162,6 +179,12 @@ var blogposts;
             this.title = title;
             this.body = body;
         }
+        BlogPostData.prototype.toBlogPost = function (id) {
+            return new blogposts.BlogPost(id, this.title, this.body);
+        };
+        BlogPostData.fromBlogPost = function (blogPost) {
+            return new BlogPostData(blogPost.title, blogPost.body);
+        };
         return BlogPostData;
     })();
     blogposts.BlogPostData = BlogPostData;
@@ -299,16 +322,59 @@ var blogposts;
             });
             return deferred.promise;
         };
-        RemoteBlogPostStore.prototype.edit = function (editedPost) {
+        /*
+        What the fuck
+        edit(editedPost: BlogPost): ng.IPromise<BlogPost> {
             var deferred = this.$q.defer();
             var that = this;
+
+            var data = JSON.stringify(editedPost);
+            console.log("Edited post:");
+            console.log(editedPost);
+            console.log("Id type:");
+            console.log(typeof editedPost.id)
+            editedPost.id = Number.parseInt(editedPost.id);
+            console.log(typeof editedPost.id)
+
             this.$http({
                 method: 'PUT',
                 url: '/posts/' + editedPost.id,
                 headers: {
                     'token': that.authenticationService.getToken()
                 },
-                data: JSON.stringify(editedPost)
+                data: data
+            }).then(
+                function(result: ServerResponse) {
+                    deferred.resolve(result.data);
+                },
+                function(error) {
+                    console.log("Had error " + error);
+                    deferred.reject("Had error " + error);
+                }
+            );
+
+            return deferred.promise;
+        }
+         */
+        RemoteBlogPostStore.prototype.edit = function (editedPost) {
+            var deferred = this.$q.defer();
+            var that = this;
+            console.log("Edited post:");
+            console.log(editedPost);
+            console.log("Id type:");
+            console.log(typeof editedPost.id);
+            //editedPost.id = Number.parseInt(editedPost.id);
+            //console.log(typeof editedPost.id)
+            editedPost = new blogposts.BlogPost(parseInt("" + editedPost.id), editedPost.title, editedPost.body);
+            console.log(typeof editedPost.id);
+            var data = JSON.stringify(editedPost);
+            this.$http({
+                method: 'PUT',
+                url: '/posts/' + editedPost.id,
+                headers: {
+                    'token': that.authenticationService.getToken()
+                },
+                data: data
             }).then(function (result) {
                 deferred.resolve(result.data);
             }, function (error) {
@@ -370,14 +436,19 @@ var blogposts;
 (function (blogposts) {
     'use strict';
     var AuthenticationCtrl = (function () {
-        function AuthenticationCtrl(authenticationService, $scope) {
+        function AuthenticationCtrl(authenticationService, pageService, $scope) {
             this.authenticationService = authenticationService;
+            this.pageService = pageService;
             this.$scope = $scope;
             this.username = "";
             this.password = "";
             $scope.vm = this;
             this.checkLoggedIn();
         }
+        //This is so dodgy =p
+        AuthenticationCtrl.prototype.pageHit = function () {
+            this.pageService.pageChanged(AuthenticationCtrl.PAGE_NAME);
+        };
         AuthenticationCtrl.prototype.checkLoggedIn = function () {
             var that = this;
             console.log(this.authenticationService.isLoggedIn());
@@ -406,8 +477,10 @@ var blogposts;
         };
         AuthenticationCtrl.$inject = [
             'authenticationService',
+            'pageService',
             '$scope'
         ];
+        AuthenticationCtrl.PAGE_NAME = "Authentication";
         return AuthenticationCtrl;
     })();
     blogposts.AuthenticationCtrl = AuthenticationCtrl;
@@ -646,6 +719,82 @@ var blogposts;
     })();
     blogposts.PromiseBuilder = PromiseBuilder;
 })(blogposts || (blogposts = {}));
+/// <reference path='../_all.ts' />
+var blogposts;
+(function (blogposts) {
+    'use strict';
+    var PageService = (function () {
+        function PageService() {
+            this.receivers = new Array();
+        }
+        // private receivers: Array<Function<String => Void>>;
+        // private receivers: { (page: string): void; } [];
+        PageService.prototype.register = function (receiver) {
+            console.log("Registered");
+            this.receivers.push(receiver);
+        };
+        PageService.prototype.pageChanged = function (page) {
+            console.log("page changed " + page);
+            _.forEach(this.receivers, function (receiver) {
+                console.log("Sending " + page);
+                receiver(page);
+                // receiver.receive(page);
+            });
+        };
+        PageService.$inject = [];
+        return PageService;
+    })();
+    blogposts.PageService = PageService;
+})(blogposts || (blogposts = {}));
+var blogposts;
+(function (blogposts) {
+    'use strict';
+    var PageCtrl = (function () {
+        function PageCtrl(pageService, $scope) {
+            this.pageService = pageService;
+            this.$scope = $scope;
+            console.log("Initing controller");
+            $scope.vm = this;
+            this.registerWithPageService();
+        }
+        PageCtrl.prototype.isPage = function (inPage, toReturn) {
+            console.log(this.page + " === " + inPage);
+            if (this.page === inPage) {
+                //console.log("Returning " + toReturn);
+                return toReturn;
+            }
+            else {
+                //console.log("NOT Returning " + toReturn);
+                return "";
+            }
+        };
+        PageCtrl.prototype.registerWithPageService = function () {
+            var that = this;
+            this.pageService.register(function (_page) {
+                console.log("PageCtrl has heard!");
+                if (_page === blogposts.AuthenticationCtrl.PAGE_NAME) {
+                    that.page = "authentication";
+                }
+                else if (_page === blogposts.CreateBlogPostCtrl.PAGE_NAME) {
+                    that.page = "createpost";
+                }
+                else if (_page === blogposts.ViewBlogPostCtrl.PAGE_NAME_SINGLE_VIEW ||
+                    _page === blogposts.ViewBlogPostCtrl.PAGE_NAME_LIST_VIEW) {
+                    that.page = "viewpost";
+                }
+                else {
+                    throw "Unknown page " + _page;
+                }
+            });
+        };
+        PageCtrl.$inject = [
+            'pageService',
+            '$scope'
+        ];
+        return PageCtrl;
+    })();
+    blogposts.PageCtrl = PageCtrl;
+})(blogposts || (blogposts = {}));
 /// <reference path='../libs/jquery/jquery.d.ts' />
 /// <reference path='../libs/angular/angular.d.ts' />
 /// <reference path='../libs/angular/angular-route.d.ts' />
@@ -663,6 +812,8 @@ var blogposts;
 /// <reference path='./alerts/AlertsService.ts' />
 /// <reference path='./alerts/AlertsCtrl.ts' />
 /// <reference path='./common/PromiseBuilder.ts' />
+/// <reference path='./common/PageService.ts' />
+/// <reference path='./common/PageCtrl.ts' />
 /// <reference path='_all.ts' />
 var blogposts;
 (function (blogposts) {
@@ -673,10 +824,12 @@ var blogposts;
         .controller('createBlogPostCtrl', blogposts.CreateBlogPostCtrl)
         .controller('authenticationCtrl', blogposts.AuthenticationCtrl)
         .controller('alertsCtrl', blogposts.AlertsCtrl)
+        .controller('pageCtrl', blogposts.PageCtrl)
         .service('blogPostStore', blogposts.RemoteBlogPostStore)
         .service('authenticationService', blogposts.RemoteAuthenticationService)
         .service('alertsService', blogposts.AlertsService)
         .service('promiseBuilder', blogposts.PromiseBuilder)
+        .service('pageService', blogposts.PageService)
         .config(['$routeProvider',
         function routes($routeProvider) {
             $routeProvider

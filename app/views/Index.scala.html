@@ -1,48 +1,59 @@
 <!doctype html>
 <html lang="en" ng-app="golby" data-framework="typescript">
-  <head>
-    <link rel="stylesheet" type="text/css" href="./css/blog.css"></link>
-    <meta charset="utf-8">
-    <title>Golby!</title>
-  </head>
+    <head>
+        <link rel="stylesheet" type="text/css" href="./css/blog.css"></link>
+        <meta charset="utf-8">
+        <title>Golby!</title>
+    </head>
 
-  <body ng-controller="authenticationCtrl as auth">
-    <h1 class="blog-title">This is a blog</h1>
-    <div ng-controller="alertsCtrl">
-      <div ng-if="alert" style="width: 100%; height: 60px; vertical-align: middle; text-align: center; font-weight: bolder;">
-          <div ng-if="alert.type == 0" style='height: 100%; background-color: green; color: white;'>
-            <div style="position: relative; top: 50%; transform: translateY(-50%);">
-              {{ alert.message }}
-            </div>
-          </div>
-          <div ng-if="alert.type == 1"  style='height: 100%; background-color: blue; color: white'>
-            {{ alert.message }}
-          </div>
-          <div ng-if="alert.type == 2"  style='height: 100%; background-color: orange; color: white'>
-            {{ alert.message }}
-          </div>
-          <div ng-if="alert.type == 3"  style='height: 100%; background-color: red; color: white'>
-            <div style="position: relative; top: 50%; transform: translateY(-50%);">
-              {{ alert.message }}
-            </div>
-          </div>
+    <body ng-controller="authenticationCtrl as auth" class="main-body">
+        <div class="page-header">
+            <h1>This is a blog <small>* of power</small></h1>
         </div>
-      </div>
-    </div>
-    <div ng-show="loggedIn">Hi admin!</div>
 
-    <div class="blog-menu" ng-cloak>
-      <a href="/#/">View</a> |
-      <a href="/#/login">Log in</a>  |
-      <a href="/#/admin/posts" ng-show="auth.vm.showAdminControls()">New</a>
-    </div>
+        <div ng-controller="pageCtrl as page">
+            <div ng-controller="alertsCtrl">
+                <div ng-if="alert" style="width : 100 % ; height : 60 px ; vertical-align : middle ; text-align : center ; font-weight : bolder ;">
+                    <div ng-if="alert.type == 0" style='height : 100 % ; background-color : green ; color : white ;'>
+                        <div style="position : relative ; top : 50 % ; transform : translateY ( - 50 % ) ;">
+                  {{ alert.message }}
+                        </div>
+                    </div>
+                    <div ng-if="alert.type == 1" style='height : 100% ; background-color : blue ; color : white'>
+                {{ alert.message }}
+                    </div>
+                    <div ng-if="alert.type == 2" style='height : 100% ; background-color : orange ; color : white'>
+                {{ alert.message }}
+                    </div>
+                    <div ng-if="alert.type == 3" style='height : 100 % ; background-color : red ; color : white'>
+                        <div style="position : relative ; top : 50 % ; transform : translateY ( - 50 % ) ;">
+                  {{ alert.message }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-show="loggedIn">
+                <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+            </div>
 
-    <div ng-view></div>
-  </body>
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <ul class="nav navbar-nav">
+                        <li ng-class="page.isPage('viewpost', 'active')"><a href="/#/">Blog</a></li>
+                        <li ng-class="page.isPage('email', 'active')"><a href="/#/about">Email</a></li>
+                        <li ng-class="page.isPage('contact', 'active')"><a href="/#/contact">Contact me</a></li>
+                        <li ng-class="page.isPage('authentication', 'active')"><a href="/#/login">Login</a></li>
+                        <li ng-class="page.isPage('viewpost', 'active')"><a href="/#/admin/posts" ng-show="auth.vm.showAdminControls()">New</a></li>
+                    </ul>
+                </div>
+            </nav>
+            <div ng-view></div>
+        </div>
+    </body>
 
-  <script src="./js/node_modules/angular/angular.js"></script>
-  <script src="./js/node_modules/angular-route/angular-route.js"></script>
-  <script src="./js/node_modules/underscore/underscore.js"></script>
-  <script src="./js/node_modules/jquery/dist/jquery.js"></script>
-  <script src="./js/Application.js"></script>
+    <script src="./js/node_modules/angular/angular.js"></script>
+    <script src="./js/node_modules/angular-route/angular-route.js"></script>
+    <script src="./js/node_modules/underscore/underscore.js"></script>
+    <script src="./js/node_modules/jquery/dist/jquery.js"></script>
+    <script src="./js/Application.js"></script>
 </html>

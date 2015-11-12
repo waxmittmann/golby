@@ -1,7 +1,7 @@
 package authentication
 
-import authentication.AuthenticationController._
 import play.api.mvc.{Result, AnyContent, Request}
+import play.api.mvc.Results.Unauthorized;
 
 import scala.util.Random
 

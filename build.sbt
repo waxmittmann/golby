@@ -1,19 +1,28 @@
-//import play.PlayImport.PlayKeys._
+name := """golby"""
 
-name := """angular-seed-play"""
-
-version := "1.0-SNAPSHOT"
-
-libraryDependencies ++= Seq(
-  "org.webjars" % "angularjs" % "1.3.0-beta.2",
-  "org.webjars" % "requirejs" % "2.1.11-1"
-)     
+version := "0.0.1-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-pipelineStages := Seq(rjs, digest, gzip)
+scalaVersion := "2.11.6"
 
-//routesImport += "util.Binders._"
-//routesImport += "controllers.BlogPost"
+libraryDependencies ++= Seq(
+  jdbc,
+  cache,
+  ws
+)
 
-fork in run := true
+libraryDependencies ++= List(
+  "com.typesafe.slick" %% "slick" % "3.1.0",
+//  "com.typesafe.play" % "play-slick_2.10" % "1.1.1",
+  "com.typesafe.play" % "play-slick_2.11" % "1.1.1",
+  "org.slf4j" % "slf4j-nop" % "1.6.4",
+  "com.h2database" % "h2" % "1.3.175",
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+)
+
+resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+
+// Play provides two styles of routers, one expects its actions to be injected, the
+// other, legacy style, accesses its actions statically.
+routesGenerator := InjectedRoutesGenerator

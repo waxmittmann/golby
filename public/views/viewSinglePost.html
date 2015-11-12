@@ -1,8 +1,18 @@
 <div class="blog-posts" ng-cloak>
-  <div class="blog-post" ng-init="vm.loadSelectedPost()">
-    <div class="blog-post-title" ng-cloak>{{ selectedPost.title }}</div>
-    <div class="blog-post-body" ng-cloak>{{ selectedPost.body }}</div>
+  <!--<div class="blog-post" ng-init="vm.loadSelectedPost()">-->
+    <!--<div class="blog-post-title" ng-cloak>{{ selectedPost.title }}</div>-->
+    <!--<div class="blog-post-body" ng-cloak>{{ selectedPost.body }}</div>-->
+  <!--</div>-->
+
+  <div class="panel panel-default" ng-init="vm.loadSelectedPost()">
+    <div class="panel-heading"> <!-- blog-post-body -->
+      <h3 class="panel-title">{{ selectedPost.title }}</h3>
+    </div>
+    <div class="panel-body"> <!-- blog-post-body -->
+      {{ selectedPost.body }}
+    </div>
   </div>
+
 
   <a href="/#/">Back</a>
 </div>
