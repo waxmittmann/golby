@@ -27,7 +27,6 @@ object BlogPost {
 case class BlogPost(id: Long, title: String, body: String)
 
 class BlogPosts(tag: Tag) extends Table[(Long, String, String)](tag, "BLOGPOSTS") {
-//class BlogPosts(tag: Tag) extends Table[(Long, String, String)](tag, "BLOGPOSTS") {
   def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
 
   def title = column[String]("TITLE")
@@ -61,7 +60,6 @@ object BlogPostsRepository {
   }
 
   try { {
-    println("Creating from " + blogPosts.schema)
     doWithDb(db => {
       val setupAction: DBIO[Unit] = DBIO.seq(
         blogPosts.schema.create,
@@ -69,13 +67,11 @@ object BlogPostsRepository {
         blogPosts +=(1, "Title1", "Body1")
       )
       Await.result(db.run(setupAction), Duration.Inf)
-      println("Created, supposedly?")
     })
   }
   }
   catch {
     case ex: Exception =>
-      println("EXCEPTION!")
       ex.printStackTrace()
   }
 
@@ -88,12 +84,6 @@ object BlogPostsRepository {
       db.run(listAllQuery.result).map(_.map(r => BlogPost(r._1, r._2, r._3)))
     })
   }
-
-//  def add(blogPost: BlogPost): Future[Int] = {
-//    val addAction: FixedSqlAction[Int, NoStream, Write]
-//    = (blogPosts +=(blogPost.id, blogPost.title, blogPost.body))
-//    doWithDb(db => db.run(addAction))
-//  }
 
   val getAction = (id: Long) => blogPosts.filter(_.id === id).result.head
     .map(in => BlogPost(in._1, in._2, in._3))
@@ -110,7 +100,7 @@ object BlogPostsRepository {
 
     //See: http://slick.typesafe.com/doc/3.0.0/queries.html#inserting
     val insertQuery
-      = (blogPosts.map(p => (p.title, p.body)) returning blogPosts.map(_.id)) += (blogPost.title, blogPost.body)
+    = (blogPosts.map(p => (p.title, p.body)) returning blogPosts.map(_.id)) +=(blogPost.title, blogPost.body)
 
     doWithDb(db => db.run(insertQuery))
   }
@@ -148,10 +138,6 @@ object BlogPostsRepository {
   def addNow(blogPost: BlogPostWithoutId): Long = {
     doNow(() => add(blogPost))
   }
-
-//  def addNow(blogPost: BlogPost): Unit = {
-//    doNow(() => add(blogPost))
-//  }
 
   def removeNow(id: Long): Int = {
     doNow(() => remove(id))

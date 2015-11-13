@@ -46,10 +46,6 @@ class BlogController extends Controller {
     AuthenticationService.doIfAuthenticated((request) => {
       request.body.asJson.flatMap(json => {
         blogPostWithoutIdReads.reads(json).asOpt.flatMap(blogPostWithoutId => {
-//          val id: Long = BlogPostsRepository.addNow(blogPostWithoutId)
-//          val blogPostWithId: BlogPost = createBlogEntry(blogPostWithoutId)
-//          BlogPostsRepository.add(blogPostWithId)
-//          val blogPostWithId: BlogPost = BlogPostsRepository.addNow(blogPostWithoutId)
           val newBlogPostId: Long = BlogPostsRepository.addNow(blogPostWithoutId)
           //Maybe should just return id here
           Some(Ok(toJson(BlogPostsRepository.getNow(newBlogPostId))))
