@@ -46,9 +46,13 @@ class BlogController extends Controller {
     AuthenticationService.doIfAuthenticated((request) => {
       request.body.asJson.flatMap(json => {
         blogPostWithoutIdReads.reads(json).asOpt.flatMap(blogPostWithoutId => {
-          val blogPostWithId: BlogPost = createBlogEntry(blogPostWithoutId)
-          BlogPostsRepository.add(blogPostWithId)
-          Some(Ok(toJson(blogPostWithId)))
+//          val id: Long = BlogPostsRepository.addNow(blogPostWithoutId)
+//          val blogPostWithId: BlogPost = createBlogEntry(blogPostWithoutId)
+//          BlogPostsRepository.add(blogPostWithId)
+//          val blogPostWithId: BlogPost = BlogPostsRepository.addNow(blogPostWithoutId)
+          val newBlogPostId: Long = BlogPostsRepository.addNow(blogPostWithoutId)
+          //Maybe should just return id here
+          Some(Ok(toJson(BlogPostsRepository.getNow(newBlogPostId))))
         }
         )
       }).getOrElse(BadRequest("Something went nasty"))
@@ -76,18 +80,16 @@ class BlogController extends Controller {
 
   def delete(id: Long) = Action {
     AuthenticationService.doIfAuthenticated((request) => {
-      //Dodgy dodgy dodge alert...
-      BlogPostsRepository.listNow().find(_.id == id)
-        .flatMap((blogPost) => {
-          BlogPostsRepository.remove(blogPost)
-          Some(Ok(toJson(blogPost)))
-        })
-        .getOrElse(NotFound("No post with id " + id))
+      if (BlogPostsRepository.removeNow(id) == 0) {
+        BadRequest(s"Did not find blog post with id $id to delete")
+      } else {
+        Ok
+      }
     })
   }
 
+  //Todo: Figure out a nicer way of doing auth (annotation mayhaps? interceptor?)
   def edit(id: Long): Action[AnyContent] = play.api.mvc.Action {
-    //Todo: Figure out a nicer way of doing it (annotation mayhaps? interceptor?)
     def errorHandler(error: Seq[(JsPath, Seq[ValidationError])]): Result = {
       println(error)
       BadRequest("Something went nasty")

@@ -18,10 +18,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import slick.driver.JdbcProfile
 import play.api.db.slick.DatabaseConfigProvider
 
+object BlogPost {
+  def apply(in: (Long, String, String)) {
+    BlogPost(in._1, in._2, in._3)
+  }
+}
+
 case class BlogPost(id: Long, title: String, body: String)
 
 class BlogPosts(tag: Tag) extends Table[(Long, String, String)](tag, "BLOGPOSTS") {
-  def id = column[Long]("ID", O.PrimaryKey)
+//class BlogPosts(tag: Tag) extends Table[(Long, String, String)](tag, "BLOGPOSTS") {
+  def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
 
   def title = column[String]("TITLE")
 
@@ -82,14 +89,34 @@ object BlogPostsRepository {
     })
   }
 
-  def add(blogPost: BlogPost): Future[Int] = {
-    val addAction: FixedSqlAction[Int, NoStream, Write]
-    = (blogPosts +=(blogPost.id, blogPost.title, blogPost.body))
-    doWithDb(db => db.run(addAction))
+//  def add(blogPost: BlogPost): Future[Int] = {
+//    val addAction: FixedSqlAction[Int, NoStream, Write]
+//    = (blogPosts +=(blogPost.id, blogPost.title, blogPost.body))
+//    doWithDb(db => db.run(addAction))
+//  }
+
+  val getAction = (id: Long) => blogPosts.filter(_.id === id).result.head
+    .map(in => BlogPost(in._1, in._2, in._3))
+
+  def get(id: Long): Future[BlogPost] = {
+
+    doWithDb(db => db.run(getAction(id)))
   }
 
-  def remove(blogPost: BlogPost): Future[Int] = {
-    val action = blogPosts.filter(_.id === blogPost.id).delete
+  def add(blogPost: BlogPostWithoutId): Future[Long] = {
+    //Doesn't work for h2 "This DBMS allows only a single AutoInc column to be returned from an INSERT"
+    //val insertQuery: FixedSqlAction[(Long, String, String), NoStream, Write]
+    //= (blogPosts.map(p => (p.title, p.body)) returning blogPosts) += (blogPost.title, blogPost.body)
+
+    //See: http://slick.typesafe.com/doc/3.0.0/queries.html#inserting
+    val insertQuery
+      = (blogPosts.map(p => (p.title, p.body)) returning blogPosts.map(_.id)) += (blogPost.title, blogPost.body)
+
+    doWithDb(db => db.run(insertQuery))
+  }
+
+  def remove(id: Long): Future[Int] = {
+    val action = blogPosts.filter(_.id === id).delete
 
     doWithDb(db => {
       db.run(action)
@@ -106,6 +133,10 @@ object BlogPostsRepository {
     })
   }
 
+  def getNow(id: Long): BlogPost = {
+    doNow(() => get(id))
+  }
+
   def editNow(blogPost: BlogPost): BlogPost = {
     doNow(() => edit(blogPost))
   }
@@ -114,12 +145,16 @@ object BlogPostsRepository {
     doNow(list)
   }
 
-  def addNow(blogPost: BlogPost): Unit = {
+  def addNow(blogPost: BlogPostWithoutId): Long = {
     doNow(() => add(blogPost))
   }
 
-  def removeNow(blogPost: BlogPost): Int = {
-    doNow(() => remove(blogPost))
+//  def addNow(blogPost: BlogPost): Unit = {
+//    doNow(() => add(blogPost))
+//  }
+
+  def removeNow(id: Long): Int = {
+    doNow(() => remove(id))
   }
 
   def doNow[S](func: () => Future[S]): S = {
