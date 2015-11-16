@@ -3,7 +3,7 @@
 # ~~~~
 
 # Get the SPA
-GET         /                 spa.SpaController.index()
+GET           /                      spa.SpaController.index()
 
 # Blog post controller
 GET           /posts                 blog.BlogController.list
@@ -19,3 +19,6 @@ GET           /authentication        authentication.AuthenticationController.isA
 
 # Map the JS resource paths
 GET           /*file                 controllers.Assets.versioned(path="/public", file: Asset)
+
+# Test only
+#PUT           /test/db               test.TestController.putTestDataIntoDB()

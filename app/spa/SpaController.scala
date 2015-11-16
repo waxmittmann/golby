@@ -6,6 +6,7 @@ class SpaController extends Controller {
 
   def index = Action {
     Ok(views.html.Index())
+//    Ok
   }
   
 }

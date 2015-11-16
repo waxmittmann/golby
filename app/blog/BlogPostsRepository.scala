@@ -3,9 +3,14 @@ package blog
 import java.util.concurrent.TimeUnit
 
 import play.api.Play
+import slick.backend.DatabaseConfig
 import slick.dbio.Effect.Write
-import slick.driver.H2Driver
-import slick.driver.H2Driver.api._
+
+//import slick.driver.H2Driver
+//import slick.driver.H2Driver.api._
+
+import slick.driver.MySQLDriver.api._
+
 import slick.jdbc
 import slick.jdbc.JdbcBackend
 import slick.lifted.{ProvenShape, ForeignKeyQuery}
@@ -40,7 +45,7 @@ class BlogPosts(tag: Tag) extends Table[(Long, String, String)](tag, "BLOGPOSTS"
 //}
 
 object BlogPostsRepository {
-  val dbConfig = DatabaseConfigProvider.get[JdbcProfile](Play.current)
+  val dbConfig: DatabaseConfig[JdbcProfile] = DatabaseConfigProvider.get[JdbcProfile](Play.current)
 
   val blogPosts: TableQuery[BlogPosts] = TableQuery[BlogPosts]
 
