@@ -23,7 +23,7 @@ object AuthenticationService {
     currentlyAuthenticated.fold(false)(correctToken => correctToken == token)
   }
 
-  def doIfAuthenticated(func: (Request[AnyContent] => Result)) = {
+  def doIfAuthenticated(func: (Request[AnyContent] => Result)): (Request[AnyContent]) => Result = {
     implicit request: Request[AnyContent] =>
       request.headers.get("token").flatMap(token =>
         if (AuthenticationService.isAuthorized(token))

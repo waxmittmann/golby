@@ -49,20 +49,6 @@ object BlogPostsRepository {
 
   val blogPosts: TableQuery[BlogPosts] = TableQuery[BlogPosts]
 
-  //Gotta replace this with a proper way of populating test data
-  try {
-    doWithDb(db => {
-      val setupAction: DBIO[Unit] = DBIO.seq(
-        blogPosts.schema.create,
-        blogPosts +=(0, "Title", "Body"),
-        blogPosts +=(1, "Title1", "Body1")
-      )
-      Await.result(db.run(setupAction), Duration.Inf)
-    })
-  } catch {
-    case ex: Exception => ex.printStackTrace()
-  }
-
   private def doWithDb[S](func: Database => S): S = {
     val db: Database = dbConfig.db
     try {

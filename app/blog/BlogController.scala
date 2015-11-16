@@ -1,66 +1,37 @@
 package blog
 
 import authentication.AuthenticationService
-import play.api.Play
+//import play.api.Play
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import play.api.mvc.{Result, Action, AnyContent, Controller}
 import play.api.libs.functional.syntax._
 
-import slick.backend.DatabasePublisher
-import slick.driver.H2Driver.api._
+//import slick.backend.DatabasePublisher
+//import slick.driver.H2Driver.api._
+//
+//import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import blog.BlogPostWithoutId.blogPostWithoutIdReads
+import blog.BlogPost.blogPostReads
 
 class BlogController extends Controller {
-  implicit val blogPostWrites = new Writes[BlogPost] {
-    def writes(blogPost: BlogPost) = Json.obj(
-      "id" -> blogPost.id,
-      "title" -> blogPost.title,
-      "body" -> blogPost.body
-    )
-  }
-
-  implicit val blogPostWithoutIdReads: Reads[BlogPostWithoutId] = (
-        (JsPath \ "title").read[String] and
-        (JsPath \ "body").read[String]
-    )(BlogPostWithoutId.apply _)
-
-  implicit val blogPostReads: Reads[BlogPost] = (
-        (JsPath \ "id").read[Long] and
-        (JsPath \ "title").read[String] and
-        (JsPath \ "body").read[String]
-    )(BlogPost.apply _)
-
-
-  implicit val blogPostCompareById = new Ordering[BlogPost] {
-    override def compare(x: BlogPost, y: BlogPost): Int = {
-      return if (x.id - y.id > 0) 1
-      else if (x.id == y.id) 0
-      else -1
-    }
-  }
-
   def add() = Action {
     AuthenticationService.doIfAuthenticated((request) => {
-      request.body.asJson.flatMap(json => {
-        blogPostWithoutIdReads.reads(json).asOpt.flatMap(blogPostWithoutId => {
-          val newBlogPostId: Long = BlogPostsRepository.addNow(blogPostWithoutId)
-          //Maybe should just return id here
-          Some(Ok(toJson(BlogPostsRepository.getNow(newBlogPostId))))
+      request.body.asJson.map(json => {
+        json.validate[BlogPostWithoutId] match {
+          case s: JsSuccess[BlogPostWithoutId] => {
+            val newBlogPostId: Long = BlogPostsRepository.addNow(s.value)
+            //Maybe should just return id here
+            Ok(toJson(BlogPostsRepository.getNow(newBlogPostId)))
+          }
+          case f: JsError => {
+            BadRequest("Json was wrong")
+          }
         }
-        )
-      }).getOrElse(BadRequest("Something went nasty"))
+      }).getOrElse(BadRequest("Bad request body"))
     })
-  }
-
-  private def createBlogEntry(blogPostWithoutId: BlogPostWithoutId): BlogPost = {
-    val blogPosts: Seq[BlogPost] = BlogPostsRepository.listNow()
-    //Todo: do in DB
-    val nextId = if (blogPosts.isEmpty) 1 else blogPosts.map(_.id).max + 1;
-    val blogPostWithId = blogPostWithoutId.toBlogPost(nextId)
-    blogPostWithId
   }
 
   def list = Action {
@@ -101,12 +72,8 @@ class BlogController extends Controller {
     }
 
     def handlers(json: JsValue): Result = {
-      println(json)
-      val result: Result = blogPostReads.reads(json).asEither.fold(
-        errorHandler,
-        editHandler
-      )
-      result
+      //Hmm, how to implicit this?
+      blogPostReads.reads(json).asEither.fold(errorHandler, editHandler)
     }
 
     AuthenticationService.doIfAuthenticated((request) => {
