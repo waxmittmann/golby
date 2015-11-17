@@ -33,7 +33,6 @@ module blogposts {
     private registerWithPageService() {
       var that = this;
       this.pageService.register(function(_page) {
-        console.log("PageCtrl has heard!");
         if (_page === AuthenticationCtrl.PAGE_NAME) {
           that.page = "authentication";
         } else if (_page === CreateBlogPostCtrl.PAGE_NAME) {
