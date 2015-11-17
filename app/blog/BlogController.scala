@@ -1,24 +1,18 @@
 package blog
 
-import authentication.AuthenticationService
-//import play.api.Play
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import play.api.mvc.{Result, Action, AnyContent, Controller}
 import play.api.libs.functional.syntax._
 
-//import slick.backend.DatabasePublisher
-//import slick.driver.H2Driver.api._
-//
-//import scala.concurrent.ExecutionContext.Implicits.global
+import authentication.AuthenticatedAction
 
 import blog.BlogPostWithoutId.blogPostWithoutIdReads
 import blog.BlogPost.blogPostReads
 
 class BlogController extends Controller {
-  def add() = Action {
-    AuthenticationService.doIfAuthenticated((request) => {
+  def add() = AuthenticatedAction { request =>
       request.body.asJson.map(json => {
         json.validate[BlogPostWithoutId] match {
           case s: JsSuccess[BlogPostWithoutId] => {
@@ -31,7 +25,6 @@ class BlogController extends Controller {
           }
         }
       }).getOrElse(BadRequest("Bad request body"))
-    })
   }
 
   def list = Action {
@@ -45,18 +38,15 @@ class BlogController extends Controller {
       .getOrElse(NotFound("No post with id " + id))
   }
 
-  def delete(id: Long) = Action {
-    AuthenticationService.doIfAuthenticated((request) => {
+  def delete(id: Long) = AuthenticatedAction { request =>
       if (BlogPostsRepository.removeNow(id) == 0) {
         BadRequest(s"Did not find blog post with id $id to delete")
       } else {
         Ok
       }
-    })
   }
 
-  //Todo: Figure out a nicer way of doing auth (annotation mayhaps? interceptor?)
-  def edit(id: Long): Action[AnyContent] = play.api.mvc.Action {
+  def edit(id: Long) = AuthenticatedAction { request =>
     def errorHandler(error: Seq[(JsPath, Seq[ValidationError])]): Result = {
       println(error)
       BadRequest("Something went nasty")
@@ -76,9 +66,6 @@ class BlogController extends Controller {
       blogPostReads.reads(json).asEither.fold(errorHandler, editHandler)
     }
 
-    AuthenticationService.doIfAuthenticated((request) => {
-      request.body.asJson.map(handlers).getOrElse(BadRequest("Something went nasty"))
-    })
+    request.body.asJson.map(handlers).getOrElse(BadRequest("Something went nasty"))
   }
-
 }
